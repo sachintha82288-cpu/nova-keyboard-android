@@ -533,9 +533,7 @@
       "base"
     ],
     "dex_files": 2,
-    "manifest": {
-      "error": "manifest XML parse failed: no element found: line 1, column 70"
-    }
+    "manifest": null
   },
   "keystore": {
     "present": true,

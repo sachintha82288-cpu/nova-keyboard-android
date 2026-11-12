@@ -41,8 +41,8 @@ archive: 152 entries, 18.7MB uncompressed
 
 ===== AAB: NOVA-KEYBOARD.aab (6.5MB) =====
 sha256  9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
+could not decode the AAB manifest (unexpected protobuf shape)
 modules: ['BUNDLE-METADATA', 'META-INF', 'base']  dex: 2  bundle_config: BundleConfig.pb
-package None min None target None perms 0
 
 NOVA KEYBOARD — STATIC ANALYSIS REPORT
 ==============================================================================
@@ -51,22 +51,19 @@ analysed: apk-analysis/bin/NOVA-KEYBOARD.aab
 
 FINDINGS
 ------------------------------------------------------------------------------
-[CRITICAL] signing      the release signing key (.jks) is published as a public release asset — anyone can sign malicious updates with the same identity
+[CRITICAL] signing      the release signing key (NOVA-KEYBOARD-release-keystore.jks) is published as a public release asset — anyone who downloads it can sign an update that Android will accept as genuine NOVA KEYBOARD
            evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
 [MEDIUM  ] components   exported components with no permission guard: ['com.nova.keyboard.ui.MainActivity']
            evidence: any app on the device can bind/start these
-[MEDIUM  ] manifest     android:allowBackup is None; user data can leave the device via backup
 [LOW     ] network      no network security config (no certificate pinning / domain allowlist)
 [LOW     ] signing      signed with APK Signature Scheme v2 only; v3 (key rotation / proof-of-rotation) is absent
-[LOW     ] network      usesCleartextTraffic not set → defaults to true on API < 28
 [INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
 [INFO    ] components   IME service is protected by BIND_INPUT_METHOD
 [INFO    ] archive      4/4 native libraries are stored uncompressed (zipalign/AGP default)
 [INFO    ] code         R8/minification looks OFF — 0.4% of classes have 1–2 character names, 13142 classes total
 [INFO    ] network      hard-coded hosts in the DEX: schemas.android.com, api.openai.com
-[INFO    ] permissions  no intrusive permissions; only network/vibrate/network-state if listed
+[INFO    ] permissions  no intrusive permissions requested (no SMS, contacts, location, camera or audio)
 [INFO    ] permissions  INTERNET is present — expected for AI Studio, but the IME can therefore reach the network
-[INFO    ] components   no exported component is left without a permission guard
 
 MACHINE-READABLE SUMMARY
 ------------------------------------------------------------------------------
