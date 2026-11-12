@@ -39,6 +39,34 @@ from pathlib import Path
 LOG_LINES: list[str] = []
 
 
+_LOGGING_READY = False
+
+
+def quiet_logs() -> None:
+    """androguard is extremely chatty at DEBUG level; keep the report readable."""
+    global _LOGGING_READY
+    if _LOGGING_READY:
+        return
+    import logging
+
+    # androguard 4.x logs through loguru, not the stdlib
+    try:
+        from loguru import logger as _loguru
+
+        _loguru.remove()
+    except Exception:
+        pass
+
+    for name in ("androguard", "asn1crypto", "apksigtool"):
+        lg = logging.getLogger(name)
+        lg.setLevel(logging.ERROR)
+        lg.propagate = False
+        for h in list(lg.handlers):
+            lg.removeHandler(h)
+    logging.getLogger().setLevel(logging.ERROR)
+    _LOGGING_READY = True
+
+
 def log(line: str = "") -> None:
     print(line, flush=True)
     LOG_LINES.append(line)
@@ -139,9 +167,6 @@ def aapt2_permissions(aapt2: str | None, apk: Path) -> list[dict]:
 
 def manifest_xml(apk: Path | bytes) -> str:
     """Decode the binary AndroidManifest.xml into readable XML."""
-    import logging
-
-    logging.disable(logging.CRITICAL)
     try:
         from androguard.core.axml import AXMLPrinter  # type: ignore
 
@@ -347,9 +372,6 @@ THIRD_PARTY_HINTS.pop("com/secneo", None)
 
 def dex_analysis(apk: Path) -> dict:
     """Walk every DEX method reference: class/method inventory, library fingerprint, risky APIs."""
-    import logging
-
-    logging.disable(logging.CRITICAL)
     try:
         from androguard.core.dex import DEX  # type: ignore
     except Exception as exc:  # pragma: no cover
@@ -509,7 +531,7 @@ def security_review(rep: Report, manifest: dict, signing: dict, arch: dict, dex:
     if exported_services:
         pass  # exported IME service is expected; the BIND_INPUT_METHOD permission guards it
 
-    text = json.dumps(signing)
+    text = json.dumps(signing or {})
     if "debug" in text.lower() or "androiddebugkey" in text.lower():
         rep.finding("HIGH", "signing", "APK appears signed with a debug key")
 
@@ -595,6 +617,7 @@ def analyse_apk(path: Path, rep: Report, aapt2: str | None, apksigner: str | Non
     )
 
     signing = signing_info(path, apksigner)
+    ks = keystore_info(keystore) if keystore else {"present": False}
     log(f"signing: {signing.get('apksigner_output','')[:300]}")
 
     dex = dex_analysis(path)
@@ -616,7 +639,7 @@ def analyse_apk(path: Path, rep: Report, aapt2: str | None, apksigner: str | Non
     )
     rep.section(path.suffix.lstrip(".") + "_signing", signing)
     rep.section(path.suffix.lstrip(".") + "_dex", dex)
-    security_review(rep, manifest, signing, arch, dex, keystore or {})
+    security_review(rep, manifest, signing, arch, dex, ks)
 
     log("\n-- permissions --")
     for p in manifest.get("permissions") or []:
@@ -665,7 +688,7 @@ def analyse_aab(path: Path, rep: Report, keystore: Path | None) -> dict:
     )
     if base_manifest:
         log(f"package {base_manifest.get('package')} min {base_manifest.get('min_sdk')} target {base_manifest.get('target_sdk')}")
-        security_review(rep, base_manifest, {}, {}, {}, keystore or {})
+        security_review(rep, base_manifest, {}, {}, {}, keystore_info(keystore) if keystore else {})
     return rep.data
 
 
@@ -750,6 +773,9 @@ def main() -> int:
     log("\n" + text)
     log(f"wrote {out_dir/'apk-report.txt'} and apk-report.json")
     return 0
+
+
+quiet_logs()
 
 
 if __name__ == "__main__":
