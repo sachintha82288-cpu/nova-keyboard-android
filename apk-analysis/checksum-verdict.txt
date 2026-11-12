@@ -1,0 +1,21 @@
+--- files fetched ---
+total 25964
+drwxr-xr-x 2 runner runner     4096 Nov 12 15:33 .
+drwxr-xr-x 3 runner runner     4096 Nov 12 15:33 ..
+-rw-r--r-- 1 runner runner    20598 Nov 12 15:33 NOVA-KEYBOARD-documentation.zip
+-rw-r--r-- 1 runner runner     4388 Nov 12 15:33 NOVA-KEYBOARD-release-keystore.jks
+-rw-r--r-- 1 runner runner   126505 Nov 12 15:33 NOVA-KEYBOARD-source.zip
+-rw-r--r-- 1 runner runner  6769826 Nov 12 15:33 NOVA-KEYBOARD.aab
+-rw-r--r-- 1 runner runner 19637774 Nov 12 15:33 NOVA-KEYBOARD.apk
+-rw-r--r-- 1 runner runner      538 Nov 12 15:33 SHA256SUMS.txt
+-rw-r--r-- 1 runner runner      168 Nov 12 15:33 checksums.txt
+--- checksums.txt as published in the release ---
+7a5a9da9cfb1356f55507df51e0feac7945a467ffe0fd86667092d40d2c2e7c9  NOVA-KEYBOARD.apk
+9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0  NOVA-KEYBOARD.aab
+--- checksums.txt committed in the repo at this ref ---
+(none)
+--- recomputed ---
+FILE NOVA-KEYBOARD.apk 7a5a9da9cfb1356f55507df51e0feac7945a467ffe0fd86667092d40d2c2e7c9
+VERDICT MATCH NOVA-KEYBOARD.apk
+FILE NOVA-KEYBOARD.aab 9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
+VERDICT MATCH NOVA-KEYBOARD.aab
