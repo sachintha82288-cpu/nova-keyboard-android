@@ -5,12 +5,13 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    env:
+      BR: arena/19f128dd-nova-keyboard-android
     steps:
       - uses: actions/checkout@v4
-        with: { ref: arena/19f128dd-nova-keyboard-android }
-      - name: try to push a file back
-        run: |
+      - run: |
           echo "probe write ok $(date -u)" >> ci-probe.txt
           git config user.name nova-ci; git config user.email ci@nova.local
-          git add ci-probe.txt && git commit -m "ci: probe write" || true
-          git push && echo PUSH_OK || echo PUSH_FAIL
+          git add ci-probe.txt
+          git commit -m "ci: probe write"
+          git push origin HEAD:refs/heads/$BR && echo PUSH_OK || echo PUSH_FAIL
