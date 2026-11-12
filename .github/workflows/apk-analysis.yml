@@ -83,9 +83,18 @@ jobs:
 
       - name: Run analysis
         run: |
-          /tmp/venv/bin/python scripts/apk_analysis.py \
+          set +e
+          /tmp/venv/bin/python -u scripts/apk_analysis.py \
             --bin-dir "$OUT/bin" --out "$OUT" --aapt2 "$BUILD_TOOLS/aapt2" \
-            --apksigner "$BUILD_TOOLS/apksigner" --targets "$TARGETS" 2>&1 | tail -40
+            --apksigner "$BUILD_TOOLS/apksigner" --targets "$TARGETS" > "$OUT/analysis.log" 2>&1
+          rc=$?
+          echo "analyzer exit code: $rc" | tee -a "$OUT/analysis.log"
+          tail -80 "$OUT/analysis.log"
+          echo "--- output dir ---"
+          ls -la "$OUT"
+          echo "--- workspace ---"
+          ls -la
+          exit 0
 
       - name: Commit report back to the branch
         run: |
