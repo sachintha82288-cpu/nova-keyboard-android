@@ -55,9 +55,13 @@ object ServiceLocator {
     lateinit var ai: AiClient
         private set
 
+    /** True once the graph is built; accessors below re-init if it is not. */
+    @Volatile
+    private var ready = false
+
     @Synchronized
     fun init(context: Context) {
-        if (::settings.isInitialized) return
+        if (::settings.isInitialized) { ready = true; return }
         appContext = context.applicationContext
         settings = SettingsRepository(appContext, scope).also { it.start() }
         database = NovaDatabase(appContext)
@@ -69,10 +73,22 @@ object ServiceLocator {
         suggestions = SuggestionEngine(appContext, learning)
         secure = SecureStore(appContext)
         ai = AiClient(secure, settings)
+        ready = true
         scope.launch {
-            snippets.seedIfEmpty()
-            macros.seedIfEmpty()
-            clipboard.expireOlderThan(settings.current.clipboardExpiryDays)
+            runCatching {
+                snippets.seedIfEmpty()
+                macros.seedIfEmpty()
+                clipboard.expireOlderThan(settings.current.clipboardExpiryDays)
+            }
         }
+    }
+
+    /**
+     * Guarantees the graph exists before use. A `lateinit` access before init
+     * would throw UninitializedPropertyAccessException and kill the keyboard,
+     * which is a known failure mode for IMEs.
+     */
+    fun ensureInitialised(context: Context) {
+        if (!ready) init(context)
     }
 }
