@@ -413,18 +413,13 @@ def _parse_xml_element(buf: bytes) -> dict:
             if a["name"]:
                 el["attrs"].append(a)
         elif field == 5:
-            # A child is either a wrapped XmlNode{element=1} or a bare XmlElement;
-            # accept both and keep whichever produces a real element name.
-            child = _parse_xml_element(val)
-            if not child.get("name"):
-                for f2, w2, v2 in _pb_fields(val):
-                    if f2 == 1 and w2 == 2:
-                        cand = _parse_xml_element(v2)
-                        if cand.get("name"):
-                            child = cand
-                            break
-            if child.get("name"):
-                el["children"].append(child)
+            # A child is an XmlNode { 1: element, 2: text, 3: source }.
+            for f2, w2, v2 in _pb_fields(val):
+                if f2 == 1 and w2 == 2:
+                    child = _parse_xml_element(v2)
+                    if child.get("name"):
+                        el["children"].append(child)
+                    break
         elif field == 6:
             el["text"] = _s(val)
     return el
@@ -449,6 +444,9 @@ def parse_aab_manifest(data: bytes) -> str | None:
             return []
         pad = "  " * depth
         attrs = " ".join(f'{k}="{v}"' for k, v in map(_xml_attr, el["attrs"]) if k)
+        if depth == 0:
+            # the protobuf keeps namespaces out of band; ElementTree needs the declaration
+            attrs = f'xmlns:android="{ANDROID_NS}"' + ((" " + attrs) if attrs else "")
         opening = f"{pad}<{el['name']}{(' ' + attrs) if attrs else ''}"
         if not el["children"]:
             return [opening + " />"]
@@ -810,11 +808,22 @@ def security_review(
 
     # Exported components that are not guarded by a permission
     comps = (app_attrs.get("_components") or {})
+    xml_all = manifest.get("manifest_xml") or ""
+    launcher = set(re.findall(r'<activity[^>]*name="([^"]+)"[^>]*>(?:(?!</activity>).)*?LAUNCHER', xml_all, re.S))
     unguarded = [
         name
         for name, meta in comps.items()
-        if str(meta.get("exported")).lower() == "true" and not meta.get("permission")
+        if str(meta.get("exported")).lower() == "true"
+        and not meta.get("permission")
+        and name not in launcher
     ]
+    if launcher:
+        rep.finding(
+            "INFO",
+            "components",
+            f"launcher activity exported as required by Android: {sorted(launcher)}",
+            key="launcher",
+        )
     if unguarded:
         rep.finding(
             "MEDIUM",
