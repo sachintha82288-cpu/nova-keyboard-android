@@ -87,3 +87,11 @@ open("english_words.txt", "w").write("\n".join(words))
 
 `sinhala_words.txt` is a curated starter list of 166 common Sinhala words; the engine also learns the
 user's own words at runtime.
+
+## Analysis toolchain (no Android SDK required)
+
+`bash scripts/setup_apk_toolchain.sh` installs JDK 17, aapt2, apktool and the Python analysis stack
+(androguard, pyaxmlparser, apksigtool) into `.toolchain/` from PyPI/npm, then `source .toolchain/env.sh`
+puts `java`, `aapt2` and `apktool` on `PATH`. `python3 scripts/apk_analysis.py --bin-dir <dir>
+--out apk-analysis` produces the manifest/signing/DEX/security report — see `apk-analysis/ANALYSIS.md`
+for the current result and `.github/workflows/apk-analysis.yml` for the CI version.
