@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NOVA KEYBOARD</string>
+    <string name="ime_name">NOVA KEYBOARD</string>
+    <string name="subtype_english">English</string>
+    <string name="subtype_sinhala">Sinhala</string>
+    <string name="slogan">TYPE BEYOND LIMITS.</string>
+</resources>
