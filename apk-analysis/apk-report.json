@@ -534,7 +534,70 @@
     ],
     "dex_files": 2,
     "manifest": {
-      "error": "manifest XML parse failed: unbound prefix: line 1, column 0"
+      "package": "com.nova.keyboard",
+      "version_name": "1.0.0",
+      "version_code": "1",
+      "min_sdk": "29",
+      "target_sdk": "34",
+      "permissions": [
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE",
+        "com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "declared_permissions": [
+        "com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "features": [],
+      "activities": [
+        "com.nova.keyboard.ui.MainActivity"
+      ],
+      "services": [
+        "com.nova.keyboard.ime.NovaInputMethodService"
+      ],
+      "receivers": [
+        "androidx.profileinstaller.ProfileInstallReceiver"
+      ],
+      "providers": [
+        "androidx.startup.InitializationProvider"
+      ],
+      "application_attributes": {
+        "android:allowBackup": "false",
+        "android:appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "android:dataExtractionRules": "@xml/data_extraction_rules",
+        "android:extractNativeLibs": "false",
+        "android:fullBackupContent": "false",
+        "android:icon": "@mipmap/ic_launcher",
+        "android:label": "@string/app_name",
+        "android:name": "com.nova.keyboard.core.NovaApplication",
+        "android:roundIcon": "@mipmap/ic_launcher",
+        "android:supportsRtl": "true",
+        "android:theme": "@style/Theme.Nova",
+        "android:usesCleartextTraffic": "false",
+        "_components": {
+          "com.nova.keyboard.ui.MainActivity": {
+            "exported": "true",
+            "permission": null,
+            "has_intent_filter": true
+          },
+          "com.nova.keyboard.ime.NovaInputMethodService": {
+            "exported": "true",
+            "permission": "android.permission.BIND_INPUT_METHOD",
+            "has_intent_filter": true
+          },
+          "androidx.profileinstaller.ProfileInstallReceiver": {
+            "exported": "true",
+            "permission": "android.permission.DUMP",
+            "has_intent_filter": true
+          },
+          "androidx.startup.InitializationProvider": {
+            "exported": "false",
+            "permission": null,
+            "has_intent_filter": false
+          }
+        }
+      },
+      "manifest_xml": "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"com.nova.keyboard\" android:versionCode=\"1\" android:versionName=\"1.0.0\" android:compileSdkVersion=\"34\" platformBuildVersionCode=\"34\" android:compileSdkVersionCodename=\"14\" platformBuildVersionName=\"14\">\n  <uses-sdk android:minSdkVersion=\"29\" android:targetSdkVersion=\"34\" />\n  <uses-permission android:name=\"android.permission.INTERNET\" />\n  <uses-permission android:name=\"android.permission.VIBRATE\" />\n  <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />\n  <permission android:name=\"com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION\" android:protectionLevel=\"signature\" />\n  <uses-permission android:name=\"com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION\" />\n  <application android:allowBackup=\"false\" android:appComponentFactory=\"androidx.core.app.CoreComponentFactory\" android:dataExtractionRules=\"@xml/data_extraction_rules\" android:extractNativeLibs=\"false\" android:fullBackupContent=\"false\" android:icon=\"@mipmap/ic_launcher\" android:label=\"@string/app_name\" android:name=\"com.nova.keyboard.core.NovaApplication\" android:roundIcon=\"@mipmap/ic_launcher\" android:supportsRtl=\"true\" android:theme=\"@style/Theme.Nova\" android:usesCleartextTraffic=\"false\">\n    <activity android:exported=\"true\" android:label=\"@string/app_name\" android:name=\"com.nova.keyboard.ui.MainActivity\" android:windowSoftInputMode=\"adjustResize\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\" />\n        <category android:name=\"android.intent.category.LAUNCHER\" />\n      </intent-filter>\n    </activity>\n    <service android:exported=\"true\" android:label=\"@string/ime_name\" android:name=\"com.nova.keyboard.ime.NovaInputMethodService\" android:permission=\"android.permission.BIND_INPUT_METHOD\">\n      <intent-filter>\n        <action android:name=\"android.view.InputMethod\" />\n      </intent-filter>\n      <meta-data android:name=\"android.view.im\" android:resource=\"@xml/method\" />\n    </service>\n    <provider android:authorities=\"com.nova.keyboard.androidx-startup\" android:exported=\"false\" android:name=\"androidx.startup.InitializationProvider\">\n      <meta-data android:name=\"androidx.emoji2.text.EmojiCompatInitializer\" android:value=\"androidx.startup\" />\n      <meta-data android:name=\"androidx.lifecycle.ProcessLifecycleInitializer\" android:value=\"androidx.startup\" />\n      <meta-data android:name=\"androidx.profileinstaller.ProfileInstallerInitializer\" android:value=\"androidx.startup\" />\n    </provider>\n    <receiver android:directBootAware=\"false\" android:enabled=\"true\" android:exported=\"true\" android:name=\"androidx.profileinstaller.ProfileInstallReceiver\" android:permission=\"android.permission.DUMP\">\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.INSTALL_PROFILE\" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.SKIP_FILE\" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.SAVE_PROFILE\" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.BENCHMARK_OPERATION\" />\n      </intent-filter>\n    </receiver>\n  </application>\n</manifest>"
     }
   },
   "keystore": {
