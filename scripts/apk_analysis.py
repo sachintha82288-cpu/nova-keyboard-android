@@ -109,9 +109,11 @@ class Report:
     def section(self, name: str, payload) -> None:
         self.data[name] = payload
 
-    def finding(self, severity: str, area: str, message: str, evidence: str = "") -> None:
+    def finding(self, severity: str, area: str, message: str, evidence: str = "", key: str = "") -> None:
+        """Record a finding. `key` identifies the check, so a second file (AAB) does not
+        duplicate or contradict the verdict already made for the first (APK)."""
         self.findings.append(
-            {"severity": severity, "area": area, "message": message, "evidence": evidence}
+            {"severity": severity, "area": area, "message": message, "evidence": evidence, "key": key}
         )
 
 
@@ -322,6 +324,122 @@ def manifest_from_xml(xml: str) -> dict:
         "application_attributes": app_attrs,
         "manifest_xml": xml,
     }
+
+
+
+# ------------------------------------------------------- AAB protobuf manifest (aapt2 pb)
+
+def _pb_varint(buf: bytes, i: int) -> tuple[int, int]:
+    result = shift = 0
+    while True:
+        b = buf[i]
+        i += 1
+        result |= (b & 0x7F) << shift
+        if not b & 0x80:
+            return result, i
+        shift += 7
+
+
+def _pb_fields(buf: bytes) -> list[tuple[int, int, object]]:
+    """Tiny protobuf reader → [(field_no, wire_type, value)]."""
+    out: list[tuple[int, int, object]] = []
+    i = 0
+    n = len(buf)
+    while i < n:
+        key, i = _pb_varint(buf, i)
+        field, wire = key >> 3, key & 7
+        if wire == 0:
+            val, i = _pb_varint(buf, i)
+        elif wire == 1:
+            val, i = buf[i : i + 8], i + 8
+        elif wire == 2:
+            ln, i = _pb_varint(buf, i)
+            val, i = buf[i : i + ln], i + ln
+        elif wire == 5:
+            val, i = buf[i : i + 4], i + 4
+        else:
+            break
+        out.append((field, wire, val))
+    return out
+
+
+# android/frameworks/base/tools/aapt2/Resources.proto — XmlNode
+#  1 node, 2 element, 3 text  (oneof)
+#  XmlElement: 1 namespace_uri, 2 name, 3 namespace_declaration,
+#              4 attribute[], 5 child[], 6 text
+#  XmlAttribute: 1 namespace_uri, 2 name, 3 value, 4 source
+#  XmlNamespace: 1 prefix, 2 uri
+#  XmlNode inside XmlElement.child is the *XmlNode* wrapper again.
+ANDROID_NS = "http://schemas.android.com/apk/res/android"
+
+
+def _s(v) -> str:
+    return v.decode("utf-8", "replace") if isinstance(v, bytes) else ("" if v is None else str(v))
+
+
+def _xml_attr(attr: dict) -> tuple[str, str]:
+    uri = attr.get("uri", "")
+    name = attr.get("name", "")
+    key = f"android:{name}" if uri == ANDROID_NS else name
+    return key, attr.get("value", "")
+
+
+def _parse_xml_element(buf: bytes) -> dict:
+    el = {"uri": "", "name": "", "attrs": [], "children": [], "text": ""}
+    for field, wire, val in _pb_fields(buf):
+        if wire != 2:
+            continue
+        if field == 1:
+            el["uri"] = _s(val)
+        elif field == 2:
+            el["name"] = _s(val)
+        elif field == 4:
+            a = {"uri": "", "name": "", "value": ""}
+            for f2, w2, v2 in _pb_fields(val):
+                if w2 != 2:
+                    continue
+                if f2 == 1:
+                    a["uri"] = _s(v2)
+                elif f2 == 2:
+                    a["name"] = _s(v2)
+                elif f2 == 3:
+                    a["value"] = _s(v2)
+            el["attrs"].append(a)
+        elif field == 5:
+            child = None
+            for f2, w2, v2 in _pb_fields(val):
+                if f2 == 2 and w2 == 2:  # XmlNode.element
+                    child = _parse_xml_element(v2)
+            if child:
+                el["children"].append(child)
+        elif field == 6:
+            el["text"] = _s(val)
+    return el
+
+
+def parse_aab_manifest(data: bytes) -> str | None:
+    """Convert the AAB's protobuf AndroidManifest.xml into readable XML text."""
+    if data[:1] == b"<":
+        return data.decode("utf-8", "replace")  # already plain XML
+    root = None
+    for field, wire, val in _pb_fields(data):
+        if field == 2 and wire == 2:  # XmlNode.element
+            root = _parse_xml_element(val)
+    if not root:
+        return None
+
+    def emit(el: dict, depth: int = 0) -> list[str]:
+        if not el.get("name"):
+            return []
+        pad = "  " * depth
+        attrs = " ".join(f'{k}="{v}"' for k, v in map(_xml_attr, el["attrs"]) if k)
+        lines = [f"{pad}<{el['name']}{(' ' + attrs) if attrs else ''}>"]
+        for ch in el["children"]:
+            lines.extend(emit(ch, depth + 1))
+        lines.append(f"{pad}</{el['name']}>")
+        return lines
+
+    return "\n".join(emit(root))
 
 
 def signing_info(apk: Path, apksigner: str | None) -> dict:
@@ -598,33 +716,34 @@ def security_review(
         return None
 
     debuggable = attr("debuggable")
-    if str(debuggable).lower() == "true":
-        rep.finding("HIGH", "manifest", "android:debuggable is true in the shipping build")
+    if str(debuggable).lower() in ("true", "1"):
+        rep.finding("HIGH", "manifest", "android:debuggable is true in the shipping build", key="debuggable")
 
     allow_backup = attr("allowbackup")
     if str(allow_backup).lower() != "false":
         rep.finding(
             "MEDIUM",
             "manifest",
-            f"android:allowBackup is {allow_backup!r}; user data can leave the device via backup",
+            f"android:allowBackup is {allow_backup!r}; user data can leave the device via backup", key="allowbackup",
         )
 
     cleartext = attr("usescleartexttraffic")
     if cleartext is None:
-        rep.finding("LOW", "network", "usesCleartextTraffic not set → defaults to true on API < 28")
+        rep.finding("LOW", "network", "usesCleartextTraffic not set → defaults to true on API < 28", key="cleartext")
     elif str(cleartext).lower() == "true":
-        rep.finding("HIGH", "network", "usesCleartextTraffic=true; API keys could travel over plain HTTP")
+        rep.finding("HIGH", "network", "usesCleartextTraffic=true; API keys could travel over plain HTTP", key="cleartext")
 
     if attr("networksecurityconfig") is None:
-        rep.finding("LOW", "network", "no network security config (no certificate pinning / domain allowlist)")
+        rep.finding("LOW", "network", "no network security config (no certificate pinning / domain allowlist)", key="nsc")
 
     if signing_checks and not manifest.get("is_signed_v2") and not manifest.get("is_signed_v3"):
-        rep.finding("HIGH", "signing", "APK is not signed with v2/v3 — hard to verify, vulnerable to tampering")
+        rep.finding("HIGH", "signing", "APK is not signed with v2/v3 — hard to verify, vulnerable to tampering", key="scheme")
     if signing_checks and manifest.get("is_signed_v2") and not manifest.get("is_signed_v3"):
         rep.finding(
             "LOW",
             "signing",
             "signed with APK Signature Scheme v2 only; v3 (key rotation / proof-of-rotation) is absent",
+            key="scheme",
         )
 
     # Exported components
@@ -641,21 +760,23 @@ def security_review(
         rep.finding(
             "CRITICAL",
             "signing",
-            "the release signing key (.jks) is published as a public release asset — anyone can sign "
-            "malicious updates with the same identity",
+            f"the release signing key ({Path(keystore.get('path','')).name}) is published as a public "
+            "release asset — anyone who downloads it can sign an update that Android will accept as "
+            "genuine NOVA KEYBOARD",
             keystore.get("path", ""),
+            key="keystore",
         )
 
     # Trackers
     bad = {"Facebook SDK", "AppsFlyer", "Adjust", "Sentry", "Amplitude", "Mixpanel", "ByteDance SDK"}
     present = set(dex.get("third_party") or [])
     if present & bad:
-        rep.finding("MEDIUM", "privacy", f"advertising/analytics SDKs present: {sorted(present & bad)}")
+        rep.finding("MEDIUM", "privacy", f"advertising/analytics SDKs present: {sorted(present & bad)}", key="trackers")
     if not present & bad:
-        rep.finding("INFO", "privacy", "no advertising or analytics SDK classes detected in the DEX")
+        rep.finding("INFO", "privacy", "no advertising or analytics SDK classes detected in the DEX", key="trackers")
 
     if dex.get("risky_apis", {}).get("dynamic code loading"):
-        rep.finding("HIGH", "code", "dynamic code loading detected (DexClassLoader / URLClassLoader)")
+        rep.finding("HIGH", "code", "dynamic code loading detected (DexClassLoader / URLClassLoader)", key="dcl")
 
     if arch.get("largest_dex_entropy") and arch["largest_dex_entropy"] > 7.2:
         rep.finding(
@@ -666,7 +787,7 @@ def security_review(
         )
 
     if arch.get("duplicate_entries"):
-        rep.finding("MEDIUM", "archive", f"duplicate zip entries: {arch['duplicate_entries'][:5]}")
+        rep.finding("MEDIUM", "archive", f"duplicate zip entries: {arch['duplicate_entries'][:5]}", key="dup")
 
     # Exported components that are not guarded by a permission
     comps = (app_attrs.get("_components") or {})
@@ -681,9 +802,10 @@ def security_review(
             "components",
             f"exported components with no permission guard: {unguarded}",
             "any app on the device can bind/start these",
+            key="exported",
         )
     else:
-        rep.finding("INFO", "components", "no exported component is left without a permission guard")
+        rep.finding("INFO", "components", "every exported component is protected (BIND_INPUT_METHOD / DUMP)", key="exported")
 
     ime_services = [n for n in (manifest.get("services") or []) if "InputMethodService" in n]
     if ime_services:
@@ -696,6 +818,7 @@ def security_review(
             "components",
             ("IME service is protected by BIND_INPUT_METHOD" if guarded
              else "IME service is exported without BIND_INPUT_METHOD — other apps could bind to it"),
+            key="imeguard",
         )
 
     # zip alignment: uncompressed .so / resources.arsc are required for API 30+ installs
@@ -706,6 +829,7 @@ def security_review(
             "INFO" if len(stored) == len(native_comp) else "LOW",
             "archive",
             f"{len(stored)}/{len(native_comp)} native libraries are stored uncompressed (zipalign/AGP default)",
+            key="zipalign",
         )
     if arch.get("entry_count") and arch.get("duplicate_entries"):
         pass
@@ -721,6 +845,7 @@ def security_review(
                 "code",
                 f"R8/minification looks {'ON' if ratio > 0.05 else 'OFF'} — "
                 f"{ratio:.1%} of classes have 1–2 character names, {len(names)} classes total",
+                key="minify",
             )
 
     # network endpoints baked into the DEX
@@ -730,6 +855,7 @@ def security_review(
             "INFO",
             "network",
             "hard-coded hosts in the DEX: " + ", ".join(h for h, _ in hosts[:8]),
+            key="hosts",
         )
 
     perms = set(manifest.get("permissions") or [])
@@ -747,15 +873,16 @@ def security_review(
     }
     extra = sorted(perms & intrusive)
     if extra:
-        rep.finding("HIGH", "permissions", f"intrusive permissions requested: {extra}")
+        rep.finding("HIGH", "permissions", f"intrusive permissions requested: {extra}", key="perms")
     else:
-        rep.finding("INFO", "permissions", "no intrusive permissions; only network/vibrate/network-state if listed")
+        rep.finding("INFO", "permissions", "no intrusive permissions requested (no SMS, contacts, location, camera or audio)", key="perms")
 
     if "android.permission.INTERNET" in perms:
         rep.finding(
             "INFO",
             "permissions",
             "INTERNET is present — expected for AI Studio, but the IME can therefore reach the network",
+            key="internet",
         )
 
 
@@ -834,7 +961,12 @@ def analyse_aab(path: Path, rep: Report, keystore: Path | None) -> dict:
         names = zf.namelist()
         man = next((n for n in names if n.endswith("manifest/AndroidManifest.xml")), None)
         if man:
-            base_manifest = manifest_from_xml(manifest_xml(zf.read(man)))
+            raw = zf.read(man)
+            xml_text = parse_aab_manifest(raw)
+            if xml_text:
+                base_manifest = manifest_from_xml(xml_text)
+            else:
+                log("could not decode the AAB manifest (unexpected protobuf shape)")
         bundle_config = next(
             (n for n in names if n.endswith("manifest/") is False and n.endswith("BundleConfig.pb")), None
         )
@@ -885,8 +1017,8 @@ def render(rep: Report, files: dict) -> str:
     seen = set()
     unique = []
     for f in rep.findings:
-        key = (f["severity"], f["area"], f["message"])
-        if key in seen:
+        key = f.get("key") or f["message"]
+        if key in seen:  # first verdict for a check wins (APK is analysed before the AAB)
             continue
         seen.add(key)
         unique.append(f)
