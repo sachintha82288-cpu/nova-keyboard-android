@@ -176,11 +176,17 @@ def manifest_xml(apk: Path | bytes) -> str:
         return f"<!-- manifest decode failed: {exc} -->"
 
 
-def application_attributes(apk: Path) -> dict:
-    """Pull the <application ...> attributes out of the decoded manifest."""
+def application_attributes(apk: Path | bytes | str) -> dict:
+    """Pull the <application ...> attributes out of the decoded manifest.
+
+    Accepts an APK/zip path, raw binary manifest bytes, or an already-decoded XML string.
+    """
     import xml.etree.ElementTree as ET
 
-    xml = manifest_xml(apk)
+    if isinstance(apk, str):
+        xml = apk
+    else:
+        xml = manifest_xml(apk)
     try:
         root = ET.fromstring(xml)
     except Exception:
@@ -259,6 +265,64 @@ def manifest_via_androguard(apk: Path) -> dict:
 
 
 # --------------------------------------------------------------------------- signing
+
+def manifest_from_xml(xml: str) -> dict:
+    """Parse the key facts straight out of decoded manifest XML (used for AAB base manifests)."""
+    import xml.etree.ElementTree as ET
+
+    ns = "{http://schemas.android.com/apk/res/android}"
+    try:
+        root = ET.fromstring(xml)
+    except Exception as exc:
+        return {"error": f"manifest XML parse failed: {exc}"}
+
+    def a(el, name):
+        return el.get(ns + name)
+
+    uses_sdk = root.find("uses-sdk")
+    app = root.find("application")
+    plural = {"activity": "activities", "service": "services", "receiver": "receivers", "provider": "providers"}
+    comps = {v: [] for v in plural.values()}
+    app_attrs = {}
+    if app is not None:
+        for k, v in app.attrib.items():
+            app_attrs[k.replace(ns, "android:")] = v
+        for tag in ("activity", "service", "receiver", "provider"):
+            for el in app.findall(tag):
+                comps[plural[tag]].append(a(el, "name"))
+        app_attrs["_components"] = {
+            a(el, "name"): {
+                "exported": a(el, "exported"),
+                "permission": a(el, "permission"),
+                "has_intent_filter": el.find("intent-filter") is not None,
+            }
+            for tag in ("activity", "service", "receiver", "provider")
+            for el in app.findall(tag)
+        }
+
+    return {
+        "package": root.get("package"),
+        "version_name": a(root, "versionName"),
+        "version_code": a(root, "versionCode"),
+        "min_sdk": a(uses_sdk, "minSdkVersion") if uses_sdk is not None else None,
+        "target_sdk": a(uses_sdk, "targetSdkVersion") if uses_sdk is not None else None,
+        "permissions": sorted(
+            {a(el, "name") for el in root.findall("uses-permission") if a(el, "name")}
+        ),
+        "declared_permissions": sorted(
+            {a(el, "name") for el in root.findall("permission") if a(el, "name")}
+        ),
+        "features": sorted(
+            {a(el, "name") for el in root.findall("uses-feature") if a(el, "name")}
+        ),
+        "activities": comps["activities"],
+        "services": comps["services"],
+        "receivers": comps["receivers"],
+        "providers": comps["providers"],
+        "application_attributes": app_attrs,
+        "manifest_xml": xml,
+    }
+
 
 def signing_info(apk: Path, apksigner: str | None) -> dict:
     info: dict = {}
@@ -368,6 +432,28 @@ THIRD_PARTY_HINTS = {
     "com/secneo": None,  # placeholder removed below
 }
 THIRD_PARTY_HINTS.pop("com/secneo", None)
+
+
+_CLASS_NAME_CACHE: dict[str, list[str]] = {}
+
+
+def dex_class_names(apk: Path) -> list[str]:
+    """All class descriptors in the archive (cached per file)."""
+    key = str(apk)
+    if key in _CLASS_NAME_CACHE:
+        return _CLASS_NAME_CACHE[key]
+    names: list[str] = []
+    try:
+        from androguard.core.dex import DEX  # type: ignore
+
+        with zipfile.ZipFile(apk) as zf:
+            for n in sorted(x for x in zf.namelist() if x.endswith(".dex")):
+                d = DEX(zf.read(n))
+                names.extend(c.get_name() for c in d.get_classes())
+    except Exception:
+        pass
+    _CLASS_NAME_CACHE[key] = names
+    return names
 
 
 def dex_analysis(apk: Path) -> dict:
@@ -493,7 +579,16 @@ def archive_info(apk: Path) -> dict:
 
 # ------------------------------------------------------------------- security matrix
 
-def security_review(rep: Report, manifest: dict, signing: dict, arch: dict, dex: dict, keystore: dict) -> None:
+def security_review(
+    rep: Report,
+    manifest: dict,
+    signing: dict,
+    arch: dict,
+    dex: dict,
+    keystore: dict,
+    signing_checks: bool = True,
+    apk_path: Path | None = None,
+) -> None:
     app_attrs = {k.lower(): v for k, v in (manifest.get("application_attributes") or {}).items()}
 
     def attr(name: str):
@@ -523,8 +618,14 @@ def security_review(rep: Report, manifest: dict, signing: dict, arch: dict, dex:
     if attr("networksecurityconfig") is None:
         rep.finding("LOW", "network", "no network security config (no certificate pinning / domain allowlist)")
 
-    if not manifest.get("is_signed_v2") and not manifest.get("is_signed_v3"):
+    if signing_checks and not manifest.get("is_signed_v2") and not manifest.get("is_signed_v3"):
         rep.finding("HIGH", "signing", "APK is not signed with v2/v3 — hard to verify, vulnerable to tampering")
+    if signing_checks and manifest.get("is_signed_v2") and not manifest.get("is_signed_v3"):
+        rep.finding(
+            "LOW",
+            "signing",
+            "signed with APK Signature Scheme v2 only; v3 (key rotation / proof-of-rotation) is absent",
+        )
 
     # Exported components
     exported_services = [c for c in (manifest.get("services") or [])]
@@ -566,6 +667,70 @@ def security_review(rep: Report, manifest: dict, signing: dict, arch: dict, dex:
 
     if arch.get("duplicate_entries"):
         rep.finding("MEDIUM", "archive", f"duplicate zip entries: {arch['duplicate_entries'][:5]}")
+
+    # Exported components that are not guarded by a permission
+    comps = (app_attrs.get("_components") or {})
+    unguarded = [
+        name
+        for name, meta in comps.items()
+        if str(meta.get("exported")).lower() == "true" and not meta.get("permission")
+    ]
+    if unguarded:
+        rep.finding(
+            "MEDIUM",
+            "components",
+            f"exported components with no permission guard: {unguarded}",
+            "any app on the device can bind/start these",
+        )
+    else:
+        rep.finding("INFO", "components", "no exported component is left without a permission guard")
+
+    ime_services = [n for n in (manifest.get("services") or []) if "InputMethodService" in n]
+    if ime_services:
+        guarded = all(
+            (comps.get(n, {}) or {}).get("permission") == "android.permission.BIND_INPUT_METHOD"
+            for n in ime_services
+        )
+        rep.finding(
+            "INFO" if guarded else "HIGH",
+            "components",
+            ("IME service is protected by BIND_INPUT_METHOD" if guarded
+             else "IME service is exported without BIND_INPUT_METHOD — other apps could bind to it"),
+        )
+
+    # zip alignment: uncompressed .so / resources.arsc are required for API 30+ installs
+    native_comp = arch.get("native_compression") or {}
+    stored = [p for p, ct in native_comp.items() if ct == 0]
+    if native_comp:
+        rep.finding(
+            "INFO" if len(stored) == len(native_comp) else "LOW",
+            "archive",
+            f"{len(stored)}/{len(native_comp)} native libraries are stored uncompressed (zipalign/AGP default)",
+        )
+    if arch.get("entry_count") and arch.get("duplicate_entries"):
+        pass
+
+    # obfuscation / shrinking evidence
+    if dex.get("class_count") and apk_path is not None:
+        names = dex_class_names(apk_path)
+        if names:
+            short = sum(1 for n in names if len(n.lstrip("L").split("/")[-1].rstrip(";")) <= 2)
+            ratio = short / len(names)
+            rep.finding(
+                "INFO",
+                "code",
+                f"R8/minification looks {'ON' if ratio > 0.05 else 'OFF'} — "
+                f"{ratio:.1%} of classes have 1–2 character names, {len(names)} classes total",
+            )
+
+    # network endpoints baked into the DEX
+    hosts = dex.get("url_hosts") or []
+    if hosts:
+        rep.finding(
+            "INFO",
+            "network",
+            "hard-coded hosts in the DEX: " + ", ".join(h for h, _ in hosts[:8]),
+        )
 
     perms = set(manifest.get("permissions") or [])
     intrusive = {
@@ -639,7 +804,7 @@ def analyse_apk(path: Path, rep: Report, aapt2: str | None, apksigner: str | Non
     )
     rep.section(path.suffix.lstrip(".") + "_signing", signing)
     rep.section(path.suffix.lstrip(".") + "_dex", dex)
-    security_review(rep, manifest, signing, arch, dex, ks)
+    security_review(rep, manifest, signing, arch, dex, ks, apk_path=path)
 
     log("\n-- permissions --")
     for p in manifest.get("permissions") or []:
@@ -669,26 +834,41 @@ def analyse_aab(path: Path, rep: Report, keystore: Path | None) -> dict:
         names = zf.namelist()
         man = next((n for n in names if n.endswith("manifest/AndroidManifest.xml")), None)
         if man:
-            import tempfile
-
-            with tempfile.TemporaryDirectory() as td:
-                target = Path(td) / "base.apk"
-                # Androguard expects an APK-shaped archive; build a minimal one
-                with zipfile.ZipFile(target, "w") as out:
-                    out.writestr("AndroidManifest.xml", zf.read(man))
-                    for n in names:
-                        if n.endswith(".dex"):
-                            out.writestr(n.split("/")[-1], zf.read(n))
-                base_manifest = manifest_via_androguard(target)
+            base_manifest = manifest_from_xml(manifest_xml(zf.read(man)))
+        bundle_config = next(
+            (n for n in names if n.endswith("manifest/") is False and n.endswith("BundleConfig.pb")), None
+        )
+        module_names = sorted({n.split("/")[0] for n in names if "/" in n})
         dex_files = [n for n in names if n.endswith(".dex")]
-        log(f"modules: {len({n.split('/')[0] for n in names})}  dex: {len(dex_files)}")
+        log(f"modules: {module_names}  dex: {len(dex_files)}  bundle_config: {bundle_config or 'none'}")
+
+    # jarsigner verifies the upload key on an AAB
+    sig = {}
+    js = shutil_which("jarsigner")
+    if js:
+        rc, txt = run([js, "-verify", "-verbose", "-certs", str(path)], timeout=300)
+        sig = {"jarsigner_rc": rc, "jarsigner_output": "\n".join(txt.splitlines()[-25:])}
+    rep.section("aab_signing", sig)
+
     rep.section(
         "aab_identity",
-        {"file": path.name, "size": path.stat().st_size, "sha256": sha256(path), "manifest": base_manifest},
+        {
+            "file": path.name,
+            "size": path.stat().st_size,
+            "sha256": sha256(path),
+            "modules": module_names,
+            "dex_files": len(dex_files),
+            "manifest": base_manifest,
+        },
     )
     if base_manifest:
-        log(f"package {base_manifest.get('package')} min {base_manifest.get('min_sdk')} target {base_manifest.get('target_sdk')}")
-        security_review(rep, base_manifest, {}, {}, {}, keystore_info(keystore) if keystore else {})
+        log(
+            f"package {base_manifest.get('package')} min {base_manifest.get('min_sdk')} "
+            f"target {base_manifest.get('target_sdk')} perms {len(base_manifest.get('permissions') or [])}"
+        )
+        # A signing review is meaningless for an unsigned-on-disk AAB; pass an empty dict so the
+        # v2/v3 checks do not fire, and flag only the keystore exposure.
+        security_review(rep, base_manifest, {"aab": True}, {}, {}, keystore_info(keystore) if keystore else {}, signing_checks=False)
     return rep.data
 
 
@@ -702,6 +882,15 @@ def render(rep: Report, files: dict) -> str:
     lines.append("FINDINGS")
     lines.append("-" * 78)
     order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "INFO": 4}
+    seen = set()
+    unique = []
+    for f in rep.findings:
+        key = (f["severity"], f["area"], f["message"])
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(f)
+    rep.findings = unique
     for f in sorted(rep.findings, key=lambda x: order.get(x["severity"], 9)):
         lines.append(f"[{f['severity']:8s}] {f['area']:12s} {f['message']}")
         if f["evidence"]:
@@ -729,9 +918,14 @@ def render(rep: Report, files: dict) -> str:
                 exts = ", ".join(f"{e['ext']}={e['count']}" for e in (archive.get("by_extension") or [])[:8])
                 lines.append(f"    extensions: {exts}")
         elif key.endswith("signing"):
-            out = (val.get("apksigner_output") or "").splitlines()
+            out = (val.get("apksigner_output") or val.get("jarsigner_output") or "").splitlines()
             for ln in out[:14]:
                 lines.append(f"    {ln}")
+        elif key == "keystore" and val.get("present"):
+            lines.append(f"keystore: PUBLISHED with the release ({val.get('size')} bytes)")
+            for ln in (val.get("keytool_output") or "").splitlines():
+                if any(k in ln for k in ("Alias name", "Owner:", "Valid from", "SHA256:", "Signature algorithm", "bit RSA")):
+                    lines.append(f"    {ln.strip()}")
     return "\n".join(lines) + "\n"
 
 
