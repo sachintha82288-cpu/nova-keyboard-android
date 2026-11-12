@@ -41,8 +41,8 @@ archive: 152 entries, 18.7MB uncompressed
 
 ===== AAB: NOVA-KEYBOARD.aab (6.5MB) =====
 sha256  9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
-modules: 4  dex: 2
-package  min None target None
+modules: ['BUNDLE-METADATA', 'META-INF', 'base']  dex: 2  bundle_config: BundleConfig.pb
+package None min None target None perms 0
 
 NOVA KEYBOARD — STATIC ANALYSIS REPORT
 ==============================================================================
@@ -53,18 +53,20 @@ FINDINGS
 ------------------------------------------------------------------------------
 [CRITICAL] signing      the release signing key (.jks) is published as a public release asset — anyone can sign malicious updates with the same identity
            evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
-[CRITICAL] signing      the release signing key (.jks) is published as a public release asset — anyone can sign malicious updates with the same identity
-           evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
-[HIGH    ] signing      APK is not signed with v2/v3 — hard to verify, vulnerable to tampering
+[MEDIUM  ] components   exported components with no permission guard: ['com.nova.keyboard.ui.MainActivity']
+           evidence: any app on the device can bind/start these
 [MEDIUM  ] manifest     android:allowBackup is None; user data can leave the device via backup
 [LOW     ] network      no network security config (no certificate pinning / domain allowlist)
+[LOW     ] signing      signed with APK Signature Scheme v2 only; v3 (key rotation / proof-of-rotation) is absent
 [LOW     ] network      usesCleartextTraffic not set → defaults to true on API < 28
-[LOW     ] network      no network security config (no certificate pinning / domain allowlist)
 [INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
+[INFO    ] components   IME service is protected by BIND_INPUT_METHOD
+[INFO    ] archive      4/4 native libraries are stored uncompressed (zipalign/AGP default)
+[INFO    ] code         R8/minification looks OFF — 0.4% of classes have 1–2 character names, 13142 classes total
+[INFO    ] network      hard-coded hosts in the DEX: schemas.android.com, api.openai.com
 [INFO    ] permissions  no intrusive permissions; only network/vibrate/network-state if listed
 [INFO    ] permissions  INTERNET is present — expected for AI Studio, but the IME can therefore reach the network
-[INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
-[INFO    ] permissions  no intrusive permissions; only network/vibrate/network-state if listed
+[INFO    ] components   no exported component is left without a permission guard
 
 MACHINE-READABLE SUMMARY
 ------------------------------------------------------------------------------
@@ -86,7 +88,28 @@ apk_identity: package=com.nova.keyboard version=1.0.0 code=1 minSdk=29 targetSdk
     V2 Signer: certificate SHA-1 digest: 52fe1968247db436e5a90b34be9bd32f71870934
     V2 Signer: certificate MD5 digest: 09f8fdc907b5b8b0a5ce2091a3b2caba
     V2 Signer: key algorithm: RSA
-aab_identity: package= version=None code=None minSdk=None targetSdk=None sha256=9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
+    - Entry base/root/META-INF/androidx.profileinstaller_profileinstaller.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/androidx.savedstate_savedstate-ktx.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/androidx.savedstate_savedstate.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/androidx.startup_startup-runtime.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/androidx.tracing_tracing.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/androidx.versionedparcelable_versionedparcelable.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/com/android/build/gradle/app-metadata.properties is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/kotlinx_coroutines_android.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/kotlinx_coroutines_core.version is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/META-INF/version-control-info.textproto is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/kotlin-tooling-metadata.json is signed in JarFile but is not signed in JarInputStream
+    - Entry base/root/kotlin/annotation/annotation.kotlin_builtins is signed in JarFile but is not signed in JarInputStream
+aab_identity: package=None version=None code=None minSdk=None targetSdk=None sha256=9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
+keystore: PUBLISHED with the release (4388 bytes)
+    Alias name: nova
+    Owner: CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+    Valid from: Thu Nov 12 05:03:16 UTC 2026 until: Sat Nov 04 05:03:16 UTC 2056
+    SHA256: BF:FF:E8:69:29:8E:31:E7:4D:AB:E7:92:3F:69:74:B0:75:E4:CE:6B:73:F5:A7:DA:71:90:E6:88:19:34:3A:9B
+    Signature algorithm name: SHA384withRSA
+    Subject Public Key Algorithm: 4096-bit RSA key
 
 wrote apk-analysis/apk-report.txt and apk-report.json
 analyzer exit code: 0

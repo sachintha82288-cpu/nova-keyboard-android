@@ -519,30 +519,22 @@
     ],
     "error": null
   },
+  "aab_signing": {
+    "jarsigner_rc": 0,
+    "jarsigner_output": "- Entry base/root/META-INF/androidx.profileinstaller_profileinstaller.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/androidx.savedstate_savedstate-ktx.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/androidx.savedstate_savedstate.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/androidx.startup_startup-runtime.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/androidx.tracing_tracing.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/androidx.versionedparcelable_versionedparcelable.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/com/android/build/gradle/app-metadata.properties is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/kotlinx_coroutines_android.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/kotlinx_coroutines_core.version is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/META-INF/version-control-info.textproto is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin-tooling-metadata.json is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/annotation/annotation.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/collections/collections.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/coroutines/coroutines.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/internal/internal.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/kotlin.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/ranges/ranges.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/kotlin/reflect/reflect.kotlin_builtins is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/okhttp3/internal/publicsuffix/NOTICE is signed in JarFile but is not signed in JarInputStream\n- Entry base/root/okhttp3/internal/publicsuffix/publicsuffixes.gz is signed in JarFile but is not signed in JarInputStream\n- Entry META-INF/MANIFEST.MF is signed in JarFile but is not signed in JarInputStream\n\nThe signer certificate will expire on 2056-11-04."
+  },
   "aab_identity": {
     "file": "NOVA-KEYBOARD.aab",
     "size": 6769826,
     "sha256": "9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0",
+    "modules": [
+      "BUNDLE-METADATA",
+      "META-INF",
+      "base"
+    ],
+    "dex_files": 2,
     "manifest": {
-      "package": "",
-      "version_name": null,
-      "version_code": null,
-      "min_sdk": null,
-      "target_sdk": null,
-      "effective_target_sdk": 1,
-      "permissions": [],
-      "declared_permissions": [],
-      "features": [],
-      "main_activity": null,
-      "activities": [],
-      "services": [],
-      "receivers": [],
-      "providers": [],
-      "application_attributes": {},
-      "manifest_xml": "<!-- manifest decode failed: Type 'NoneType' cannot be serialized. -->",
-      "is_signed_v1": false,
-      "is_signed_v2": false,
-      "is_signed_v3": false
+      "error": "manifest XML parse failed: no element found: line 1, column 70"
     }
   },
   "keystore": {
