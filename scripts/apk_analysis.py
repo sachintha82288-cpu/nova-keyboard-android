@@ -963,6 +963,20 @@ def analyse_aab(path: Path, rep: Report, keystore: Path | None) -> dict:
         if man:
             raw = zf.read(man)
             xml_text = parse_aab_manifest(raw)
+            dump = Path("apk-analysis/aab-manifest.xml")
+            if xml_text:
+                try:
+                    dump.write_text(xml_text)
+                except Exception:
+                    pass
+            else:
+                log("first 160 bytes of the AAB manifest: " + raw[:160].hex())
+                try:
+                    dump.write_text(
+                        "<!-- protobuf decode failed; first 512 bytes -->\n" + raw[:512].hex()
+                    )
+                except Exception:
+                    pass
             if xml_text:
                 base_manifest = manifest_from_xml(xml_text)
             else:
@@ -979,7 +993,11 @@ def analyse_aab(path: Path, rep: Report, keystore: Path | None) -> dict:
     js = shutil_which("jarsigner")
     if js:
         rc, txt = run([js, "-verify", "-verbose", "-certs", str(path)], timeout=300)
-        sig = {"jarsigner_rc": rc, "jarsigner_output": "\n".join(txt.splitlines()[-25:])}
+        keep = [
+            ln for ln in txt.splitlines()
+            if re.search(r"jar (verified|is unsigned)|^\s*(X\.509|CN=)|Warning|error|Signer", ln)
+        ]
+        sig = {"jarsigner_rc": rc, "jarsigner_output": "\n".join(keep[:12])}
     rep.section("aab_signing", sig)
 
     rep.section(
@@ -1032,12 +1050,16 @@ def render(rep: Report, files: dict) -> str:
     lines.append("-" * 78)
     for key, val in rep.data.items():
         if key.endswith("identity"):
-            manifest = (val.get("manifest") or {})
+            manifest = (val.get("manifest") or {}) or {}
             lines.append(
                 f"{key}: package={manifest.get('package')} version={manifest.get('version_name')} "
                 f"code={manifest.get('version_code')} minSdk={manifest.get('min_sdk')} "
                 f"targetSdk={manifest.get('target_sdk')} sha256={val.get('sha256')}"
             )
+            if val.get("modules"):
+                lines.append(
+                    f"    modules={val.get('modules')} dex_files={val.get('dex_files')}"
+                )
             archive = val.get("archive") or {}
             if archive:
                 lines.append(
@@ -1086,6 +1108,20 @@ def main() -> int:
     if args.targets in ("aab", "both") and aab.exists():
         analyse_aab(aab, rep, keystore)
         analysed.append(str(aab))
+    ids = {k: v for k, v in rep.data.items() if k.endswith("identity")}
+    apk_pkg = ((ids.get("apk_identity") or {}).get("manifest") or {}).get("package")
+    aab_pkg = ((ids.get("aab_identity") or {}).get("manifest") or {}).get("package")
+    if apk_pkg and aab_pkg and apk_pkg != aab_pkg:
+        rep.finding(
+            "HIGH",
+            "identity",
+            f"the APK and the AAB declare different packages ({apk_pkg} vs {aab_pkg}) — they cannot be "
+            "the same release",
+            key="pkgmatch",
+        )
+    elif apk_pkg and aab_pkg:
+        rep.finding("INFO", "identity", f"APK and AAB both declare {apk_pkg} (consistent release)", key="pkgmatch")
+
     rep.section("keystore", keystore_info(keystore))
 
     if not analysed:
