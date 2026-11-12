@@ -41,9 +41,8 @@ archive: 152 entries, 18.7MB uncompressed
 
 ===== AAB: NOVA-KEYBOARD.aab (6.5MB) =====
 sha256  9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
-first 160 bytes of the AAB manifest: 0ace350a390a07616e64726f6964122a687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f69641a0208021a086d616e6966657374221c12077061636b6167651a11636f6d2e6e6f76612e6b6579626f617264224b0a2a687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964120b76657273696f6e436f64
-could not decode the AAB manifest (unexpected protobuf shape)
 modules: ['BUNDLE-METADATA', 'META-INF', 'base']  dex: 2  bundle_config: BundleConfig.pb
+package None min None target None perms 0
 
 NOVA KEYBOARD — STATIC ANALYSIS REPORT
 ==============================================================================
@@ -56,8 +55,10 @@ FINDINGS
            evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
 [MEDIUM  ] components   exported components with no permission guard: ['com.nova.keyboard.ui.MainActivity']
            evidence: any app on the device can bind/start these
+[MEDIUM  ] manifest     android:allowBackup is None; user data can leave the device via backup
 [LOW     ] network      no network security config (no certificate pinning / domain allowlist)
 [LOW     ] signing      signed with APK Signature Scheme v2 only; v3 (key rotation / proof-of-rotation) is absent
+[LOW     ] network      usesCleartextTraffic not set → defaults to true on API < 28
 [INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
 [INFO    ] components   IME service is protected by BIND_INPUT_METHOD
 [INFO    ] archive      4/4 native libraries are stored uncompressed (zipalign/AGP default)

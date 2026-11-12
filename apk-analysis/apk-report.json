@@ -533,7 +533,9 @@
       "base"
     ],
     "dex_files": 2,
-    "manifest": null
+    "manifest": {
+      "error": "manifest XML parse failed: unbound prefix: line 1, column 0"
+    }
   },
   "keystore": {
     "present": true,

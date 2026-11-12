@@ -9,8 +9,10 @@ FINDINGS
            evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
 [MEDIUM  ] components   exported components with no permission guard: ['com.nova.keyboard.ui.MainActivity']
            evidence: any app on the device can bind/start these
+[MEDIUM  ] manifest     android:allowBackup is None; user data can leave the device via backup
 [LOW     ] network      no network security config (no certificate pinning / domain allowlist)
 [LOW     ] signing      signed with APK Signature Scheme v2 only; v3 (key rotation / proof-of-rotation) is absent
+[LOW     ] network      usesCleartextTraffic not set → defaults to true on API < 28
 [INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
 [INFO    ] components   IME service is protected by BIND_INPUT_METHOD
 [INFO    ] archive      4/4 native libraries are stored uncompressed (zipalign/AGP default)
