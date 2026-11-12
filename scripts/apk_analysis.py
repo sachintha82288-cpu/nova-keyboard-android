@@ -24,6 +24,7 @@ gracefully and records which checks it could not run.
 from __future__ import annotations
 
 import argparse
+import base64
 import collections
 import hashlib
 import json
@@ -37,6 +38,7 @@ from pathlib import Path
 # ----------------------------------------------------------------------------- helpers
 
 LOG_LINES: list[str] = []
+OUT_DIR: Path | None = None
 
 
 _LOGGING_READY = False
@@ -385,13 +387,17 @@ def _xml_attr(attr: dict) -> tuple[str, str]:
 
 
 def _parse_xml_element(buf: bytes) -> dict:
+    """XmlElement: 1 namespace_declaration, 3 name, 4 attribute[], 5 child[], 6 text.
+
+    (Field 2 is namespace_uri in some aapt2 versions; it is not needed for a readable dump.)
+    """
     el = {"uri": "", "name": "", "attrs": [], "children": [], "text": ""}
     for field, wire, val in _pb_fields(buf):
         if wire != 2:
             continue
-        if field == 1:
+        if field == 2:
             el["uri"] = _s(val)
-        elif field == 2:
+        elif field == 3:
             el["name"] = _s(val)
         elif field == 4:
             a = {"uri": "", "name": "", "value": ""}
@@ -404,13 +410,20 @@ def _parse_xml_element(buf: bytes) -> dict:
                     a["name"] = _s(v2)
                 elif f2 == 3:
                     a["value"] = _s(v2)
-            el["attrs"].append(a)
+            if a["name"]:
+                el["attrs"].append(a)
         elif field == 5:
-            child = None
-            for f2, w2, v2 in _pb_fields(val):
-                if f2 == 2 and w2 == 2:  # XmlNode.element
-                    child = _parse_xml_element(v2)
-            if child:
+            # A child is either a wrapped XmlNode{element=1} or a bare XmlElement;
+            # accept both and keep whichever produces a real element name.
+            child = _parse_xml_element(val)
+            if not child.get("name"):
+                for f2, w2, v2 in _pb_fields(val):
+                    if f2 == 1 and w2 == 2:
+                        cand = _parse_xml_element(v2)
+                        if cand.get("name"):
+                            child = cand
+                            break
+            if child.get("name"):
                 el["children"].append(child)
         elif field == 6:
             el["text"] = _s(val)
@@ -419,13 +432,16 @@ def _parse_xml_element(buf: bytes) -> dict:
 
 def parse_aab_manifest(data: bytes) -> str | None:
     """Convert the AAB's protobuf AndroidManifest.xml into readable XML text."""
+    if not data:
+        return None
     if data[:1] == b"<":
         return data.decode("utf-8", "replace")  # already plain XML
     root = None
     for field, wire, val in _pb_fields(data):
-        if field == 2 and wire == 2:  # XmlNode.element
+        if field == 1 and wire == 2:  # XmlNode.element
             root = _parse_xml_element(val)
-    if not root:
+            break
+    if not root or not root.get("name"):
         return None
 
     def emit(el: dict, depth: int = 0) -> list[str]:
@@ -433,7 +449,10 @@ def parse_aab_manifest(data: bytes) -> str | None:
             return []
         pad = "  " * depth
         attrs = " ".join(f'{k}="{v}"' for k, v in map(_xml_attr, el["attrs"]) if k)
-        lines = [f"{pad}<{el['name']}{(' ' + attrs) if attrs else ''}>"]
+        opening = f"{pad}<{el['name']}{(' ' + attrs) if attrs else ''}"
+        if not el["children"]:
+            return [opening + " />"]
+        lines = [opening + ">"]
         for ch in el["children"]:
             lines.extend(emit(ch, depth + 1))
         lines.append(f"{pad}</{el['name']}>")
@@ -963,20 +982,16 @@ def analyse_aab(path: Path, rep: Report, keystore: Path | None) -> dict:
         if man:
             raw = zf.read(man)
             xml_text = parse_aab_manifest(raw)
-            dump = Path("apk-analysis/aab-manifest.xml")
-            if xml_text:
+            if OUT_DIR is not None:
                 try:
-                    dump.write_text(xml_text)
-                except Exception:
-                    pass
-            else:
-                log("first 160 bytes of the AAB manifest: " + raw[:160].hex())
-                try:
-                    dump.write_text(
-                        "<!-- protobuf decode failed; first 512 bytes -->\n" + raw[:512].hex()
-                    )
-                except Exception:
-                    pass
+                    # keep the raw bytes too: it is the only way to debug the decoder later
+                    (OUT_DIR / "aab-manifest.pb.b64").write_text(base64.b64encode(raw).decode())
+                    if xml_text:
+                        (OUT_DIR / "aab-manifest.xml").write_text(xml_text)
+                    else:
+                        log("AAB manifest protobuf decode failed; raw bytes saved for debugging")
+                except Exception as exc:
+                    log(f"could not save the AAB manifest: {exc}")
             if xml_text:
                 base_manifest = manifest_from_xml(xml_text)
             else:
@@ -1092,8 +1107,10 @@ def main() -> int:
     ap.add_argument("--targets", default="both")
     args = ap.parse_args()
 
+    global OUT_DIR
     bin_dir = Path(args.bin_dir)
     out_dir = Path(args.out)
+    OUT_DIR = out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     keystore = next(iter(bin_dir.glob("*.jks")), None)
 
