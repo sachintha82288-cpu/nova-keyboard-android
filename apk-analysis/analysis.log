@@ -41,6 +41,7 @@ archive: 152 entries, 18.7MB uncompressed
 
 ===== AAB: NOVA-KEYBOARD.aab (6.5MB) =====
 sha256  9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
+first 160 bytes of the AAB manifest: 0ace350a390a07616e64726f6964122a687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f69641a0208021a086d616e6966657374221c12077061636b6167651a11636f6d2e6e6f76612e6b6579626f617264224b0a2a687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964120b76657273696f6e436f64
 could not decode the AAB manifest (unexpected protobuf shape)
 modules: ['BUNDLE-METADATA', 'META-INF', 'base']  dex: 2  bundle_config: BundleConfig.pb
 
@@ -85,21 +86,20 @@ apk_identity: package=com.nova.keyboard version=1.0.0 code=1 minSdk=29 targetSdk
     V2 Signer: certificate SHA-1 digest: 52fe1968247db436e5a90b34be9bd32f71870934
     V2 Signer: certificate MD5 digest: 09f8fdc907b5b8b0a5ce2091a3b2caba
     V2 Signer: key algorithm: RSA
-    - Entry base/root/META-INF/androidx.profileinstaller_profileinstaller.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/androidx.savedstate_savedstate-ktx.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/androidx.savedstate_savedstate.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/androidx.startup_startup-runtime.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/androidx.tracing_tracing.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/androidx.versionedparcelable_versionedparcelable.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/com/android/build/gradle/app-metadata.properties is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/kotlinx_coroutines_android.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/kotlinx_coroutines_core.version is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/META-INF/version-control-info.textproto is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/kotlin-tooling-metadata.json is signed in JarFile but is not signed in JarInputStream
-    - Entry base/root/kotlin/annotation/annotation.kotlin_builtins is signed in JarFile but is not signed in JarInputStream
+          >>> Signer
+          X.509, CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+          >>> Signer
+          X.509, CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+          >>> Signer
+          X.509, CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+          >>> Signer
+          X.509, CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+          >>> Signer
+          X.509, CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+          >>> Signer
+          X.509, CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
 aab_identity: package=None version=None code=None minSdk=None targetSdk=None sha256=9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
+    modules=['BUNDLE-METADATA', 'META-INF', 'base'] dex_files=2
 keystore: PUBLISHED with the release (4388 bytes)
     Alias name: nova
     Owner: CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK

@@ -1,15 +1,15 @@
 --- files fetched ---
 total 25968
-drwxr-xr-x 2 runner runner     4096 Nov 12 15:39 .
-drwxr-xr-x 3 runner runner     4096 Nov 12 15:39 ..
--rw-r--r-- 1 runner runner       38 Nov 12 15:39 .gitkeep
--rw-r--r-- 1 runner runner    20598 Nov 12 15:39 NOVA-KEYBOARD-documentation.zip
--rw-r--r-- 1 runner runner     4388 Nov 12 15:39 NOVA-KEYBOARD-release-keystore.jks
--rw-r--r-- 1 runner runner   126505 Nov 12 15:39 NOVA-KEYBOARD-source.zip
--rw-r--r-- 1 runner runner  6769826 Nov 12 15:39 NOVA-KEYBOARD.aab
--rw-r--r-- 1 runner runner 19637774 Nov 12 15:39 NOVA-KEYBOARD.apk
--rw-r--r-- 1 runner runner      538 Nov 12 15:39 SHA256SUMS.txt
--rw-r--r-- 1 runner runner      168 Nov 12 15:39 checksums.txt
+drwxr-xr-x 2 runner runner     4096 Nov 12 15:40 .
+drwxr-xr-x 3 runner runner     4096 Nov 12 15:40 ..
+-rw-r--r-- 1 runner runner       38 Nov 12 15:40 .gitkeep
+-rw-r--r-- 1 runner runner    20598 Nov 12 15:40 NOVA-KEYBOARD-documentation.zip
+-rw-r--r-- 1 runner runner     4388 Nov 12 15:40 NOVA-KEYBOARD-release-keystore.jks
+-rw-r--r-- 1 runner runner   126505 Nov 12 15:40 NOVA-KEYBOARD-source.zip
+-rw-r--r-- 1 runner runner  6769826 Nov 12 15:40 NOVA-KEYBOARD.aab
+-rw-r--r-- 1 runner runner 19637774 Nov 12 15:40 NOVA-KEYBOARD.apk
+-rw-r--r-- 1 runner runner      538 Nov 12 15:40 SHA256SUMS.txt
+-rw-r--r-- 1 runner runner      168 Nov 12 15:40 checksums.txt
 --- checksums.txt as published in the release ---
 7a5a9da9cfb1356f55507df51e0feac7945a467ffe0fd86667092d40d2c2e7c9  NOVA-KEYBOARD.apk
 9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0  NOVA-KEYBOARD.aab
