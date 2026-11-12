@@ -13,3 +13,7 @@ keystore.properties
 .idea/
 *.iml
 .DS_Store
+
+# local APK/AAB analysis pipeline
+.toolchain/
+apk-analysis/bin/

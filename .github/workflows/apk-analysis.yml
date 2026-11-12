@@ -57,15 +57,21 @@ jobs:
       - name: Verify published checksums
         run: |
           cd "$OUT/bin"
-          echo "--- published checksums.txt (from release) ---"
-          cat checksums.txt 2>/dev/null || true
+          exec > >(tee "../checksum-verdict.txt") 2>&1
+          echo "--- files fetched ---"
+          ls -la
+          echo "--- checksums.txt as published in the release ---"
+          cat checksums.txt 2>/dev/null || echo "(no checksums.txt in the release)"
+          echo "--- checksums.txt committed in the repo at this ref ---"
+          cat ../../../release/checksums.txt 2>/dev/null || echo "(none)"
           echo "--- recomputed ---"
-          sha256sum NOVA-KEYBOARD.apk NOVA-KEYBOARD.aab 2>/dev/null || true
           for f in NOVA-KEYBOARD.apk NOVA-KEYBOARD.aab; do
-            [ -f "$f" ] || continue
-            if grep -q "$(sha256sum "$f" | cut -d' ' -f1)" checksums.txt 2>/dev/null; then
-              echo "MATCH $f"; else echo "MISMATCH $f"; fi
-          done | tee "$OUT/checksum-verdict.txt"
+            [ -f "$f" ] || { echo "MISSING $f"; continue; }
+            d=$(sha256sum "$f" | cut -d' ' -f1)
+            echo "FILE $f $d"
+            if grep -q "$d" checksums.txt 2>/dev/null; then echo "VERDICT MATCH $f"; else echo "VERDICT MISMATCH $f"; fi
+          done
+          exit 0
 
       - name: Upload raw artefacts for later re-use
         continue-on-error: true
