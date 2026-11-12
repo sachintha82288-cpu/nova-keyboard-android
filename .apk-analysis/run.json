@@ -1,1 +1,1 @@
-{"requested_at":"2026-11-12T17:00Z","targets":"both","run":10}
+{"run": false, "note": "set \"run\": true (and commit) to trigger the APK/AAB analysis; read apk-analysis/ANALYSIS.md for the last result"}

@@ -54,6 +54,23 @@ settings (see `documentation/INSTALLATION-GUIDE.md`).
 
 Full instructions, including SDK setup and signing, are in `documentation/BUILD-GUIDE.md`.
 
+
+## Static analysis of the shipped binaries
+
+`scripts/apk_analysis.py` inspects a released APK/AAB without a device: manifest and component
+exposure, permissions, v1/v2/v3 signing and certificates, DEX inventory and third-party SDK
+fingerprints, risky-API scan, hard-coded hosts, zipalign state, packer entropy, keystore exposure and
+APK-vs-AAB consistency.
+
+```bash
+bash scripts/setup_apk_toolchain.sh && source .toolchain/env.sh   # JDK, aapt2, apktool, androguard
+python3 scripts/apk_analysis.py --bin-dir <dir> --out apk-analysis --targets both
+```
+
+CI can do it end to end: set `.apk-analysis/run.json` to `{"run": true}` and push; the
+`APK Analysis` workflow downloads the release artefacts, verifies the published checksums, runs the
+analyser and commits the report. The latest result is in `apk-analysis/ANALYSIS.md`.
+
 ## Documentation
 
 | File | Contents |

@@ -2,7 +2,12 @@ name: APK Analysis
 
 # Fetches the released APK/AAB, runs the full static-analysis toolchain on it and
 # commits the report back into the repo so the report can be read without
-# downloading artifacts. Triggered from a branch when .apk-analysis/run.json exists.
+# downloading artifacts.
+#
+# Triggers:
+#   * push that touches .apk-analysis/run.json (works with a normal token)
+#   * workflow_dispatch (needs the "workflow" scope on the API token)
+# Set .apk-analysis/run.json {"run": false} to park the schedule without deleting this file.
 
 on:
   workflow_dispatch:
