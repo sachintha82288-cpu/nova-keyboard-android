@@ -1,0 +1,556 @@
+{
+  "apk_identity": {
+    "file": "NOVA-KEYBOARD.apk",
+    "size": 19637774,
+    "sha256": "7a5a9da9cfb1356f55507df51e0feac7945a467ffe0fd86667092d40d2c2e7c9",
+    "badging": {
+      "raw_head": [
+        "package: name='com.nova.keyboard' versionCode='1' versionName='1.0.0' platformBuildVersionName='14' platformBuildVersionCode='34' compileSdkVersion='34' compileSdkVersionCodename='14'",
+        "minSdkVersion:'29'",
+        "targetSdkVersion:'34'",
+        "uses-permission: name='android.permission.INTERNET'",
+        "uses-permission: name='android.permission.VIBRATE'",
+        "uses-permission: name='android.permission.ACCESS_NETWORK_STATE'",
+        "uses-permission: name='com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'",
+        "application-label:'NOVA KEYBOARD'",
+        "application-label-af:'NOVA KEYBOARD'",
+        "application-label-am:'NOVA KEYBOARD'",
+        "application-label-ar:'NOVA KEYBOARD'",
+        "application-label-as:'NOVA KEYBOARD'",
+        "application-label-az:'NOVA KEYBOARD'",
+        "application-label-be:'NOVA KEYBOARD'",
+        "application-label-bg:'NOVA KEYBOARD'",
+        "application-label-bn:'NOVA KEYBOARD'",
+        "application-label-bs:'NOVA KEYBOARD'",
+        "application-label-ca:'NOVA KEYBOARD'",
+        "application-label-cs:'NOVA KEYBOARD'",
+        "application-label-da:'NOVA KEYBOARD'",
+        "application-label-de:'NOVA KEYBOARD'",
+        "application-label-el:'NOVA KEYBOARD'",
+        "application-label-en-AU:'NOVA KEYBOARD'",
+        "application-label-en-CA:'NOVA KEYBOARD'",
+        "application-label-en-GB:'NOVA KEYBOARD'",
+        "application-label-en-IN:'NOVA KEYBOARD'",
+        "application-label-en-XC:'NOVA KEYBOARD'",
+        "application-label-es:'NOVA KEYBOARD'",
+        "application-label-es-US:'NOVA KEYBOARD'",
+        "application-label-et:'NOVA KEYBOARD'",
+        "application-label-eu:'NOVA KEYBOARD'",
+        "application-label-fa:'NOVA KEYBOARD'",
+        "application-label-fi:'NOVA KEYBOARD'",
+        "application-label-fr:'NOVA KEYBOARD'",
+        "application-label-fr-CA:'NOVA KEYBOARD'",
+        "application-label-gl:'NOVA KEYBOARD'",
+        "application-label-gu:'NOVA KEYBOARD'",
+        "application-label-hi:'NOVA KEYBOARD'",
+        "application-label-hr:'NOVA KEYBOARD'",
+        "application-label-hu:'NOVA KEYBOARD'"
+      ],
+      "name": "com.nova.keyboard",
+      "versionCode": "1",
+      "versionName": "1.0.0",
+      "targetSdk": "34",
+      "application": "label='NOVA KEYBOARD' icon='res/BW.xml'",
+      "launchable": "name='com.nova.keyboard.ui.MainActivity'  label='NOVA KEYBOARD' icon=''",
+      "permissions": [
+        "name='android.permission.ACCESS_NETWORK_STATE",
+        "name='android.permission.INTERNET",
+        "name='android.permission.VIBRATE",
+        "name='com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "features": [],
+      "densities": [
+        "'120'",
+        "'160'",
+        "'240'",
+        "'320'",
+        "'480'",
+        "'640'",
+        "'65534'"
+      ],
+      "locale_count": 86
+    },
+    "manifest": {
+      "package": "com.nova.keyboard",
+      "version_name": "1.0.0",
+      "version_code": "1",
+      "min_sdk": "29",
+      "target_sdk": "34",
+      "effective_target_sdk": 34,
+      "permissions": [
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE",
+        "com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "declared_permissions": [
+        "com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "features": [],
+      "main_activity": "com.nova.keyboard.ui.MainActivity",
+      "activities": [
+        "com.nova.keyboard.ui.MainActivity"
+      ],
+      "services": [
+        "com.nova.keyboard.ime.NovaInputMethodService"
+      ],
+      "receivers": [
+        "androidx.profileinstaller.ProfileInstallReceiver"
+      ],
+      "providers": [
+        "androidx.startup.InitializationProvider"
+      ],
+      "application_attributes": {
+        "android:theme": "@7F0A0008",
+        "android:label": "@7F090001",
+        "android:icon": "@7F080000",
+        "android:name": "com.nova.keyboard.core.NovaApplication",
+        "android:allowBackup": "false",
+        "android:supportsRtl": "true",
+        "android:extractNativeLibs": "false",
+        "android:fullBackupContent": "false",
+        "android:usesCleartextTraffic": "false",
+        "android:roundIcon": "@7F080000",
+        "android:appComponentFactory": "androidx.core.app.CoreComponentFactory",
+        "android:dataExtractionRules": "@7F0C0000",
+        "_components": {
+          "com.nova.keyboard.ui.MainActivity": {
+            "exported": "true",
+            "permission": null,
+            "has_intent_filter": true
+          },
+          "com.nova.keyboard.ime.NovaInputMethodService": {
+            "exported": "true",
+            "permission": "android.permission.BIND_INPUT_METHOD",
+            "has_intent_filter": true
+          },
+          "androidx.profileinstaller.ProfileInstallReceiver": {
+            "exported": "true",
+            "permission": "android.permission.DUMP",
+            "has_intent_filter": true
+          },
+          "androidx.startup.InitializationProvider": {
+            "exported": "false",
+            "permission": null,
+            "has_intent_filter": false
+          }
+        }
+      },
+      "manifest_xml": "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" android:versionCode=\"1\" android:versionName=\"1.0.0\" android:compileSdkVersion=\"34\" android:compileSdkVersionCodename=\"14\" package=\"com.nova.keyboard\" platformBuildVersionCode=\"34\" platformBuildVersionName=\"14\">\n  <uses-sdk android:minSdkVersion=\"29\" android:targetSdkVersion=\"34\"/>\n  <uses-permission android:name=\"android.permission.INTERNET\"/>\n  <uses-permission android:name=\"android.permission.VIBRATE\"/>\n  <uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>\n  <permission android:name=\"com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION\" android:protectionLevel=\"0x00000002\"/>\n  <uses-permission android:name=\"com.nova.keyboard.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION\"/>\n  <application android:theme=\"@7F0A0008\" android:label=\"@7F090001\" android:icon=\"@7F080000\" android:name=\"com.nova.keyboard.core.NovaApplication\" android:allowBackup=\"false\" android:supportsRtl=\"true\" android:extractNativeLibs=\"false\" android:fullBackupContent=\"false\" android:usesCleartextTraffic=\"false\" android:roundIcon=\"@7F080000\" android:appComponentFactory=\"androidx.core.app.CoreComponentFactory\" android:dataExtractionRules=\"@7F0C0000\">\n    <activity android:label=\"@7F090001\" android:name=\"com.nova.keyboard.ui.MainActivity\" android:exported=\"true\" android:windowSoftInputMode=\"0x00000010\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\"/>\n        <category android:name=\"android.intent.category.LAUNCHER\"/>\n      </intent-filter>\n    </activity>\n    <service android:label=\"@7F09000E\" android:name=\"com.nova.keyboard.ime.NovaInputMethodService\" android:permission=\"android.permission.BIND_INPUT_METHOD\" android:exported=\"true\">\n      <intent-filter>\n        <action android:name=\"android.view.InputMethod\"/>\n      </intent-filter>\n      <meta-data android:name=\"android.view.im\" android:resource=\"@7F0C0001\"/>\n    </service>\n    <provider android:name=\"androidx.startup.InitializationProvider\" android:exported=\"false\" android:authorities=\"com.nova.keyboard.androidx-startup\">\n      <meta-data android:name=\"androidx.emoji2.text.EmojiCompatInitializer\" android:value=\"androidx.startup\"/>\n      <meta-data android:name=\"androidx.lifecycle.ProcessLifecycleInitializer\" android:value=\"androidx.startup\"/>\n      <meta-data android:name=\"androidx.profileinstaller.ProfileInstallerInitializer\" android:value=\"androidx.startup\"/>\n    </provider>\n    <receiver android:name=\"androidx.profileinstaller.ProfileInstallReceiver\" android:permission=\"android.permission.DUMP\" android:enabled=\"true\" android:exported=\"true\" android:directBootAware=\"false\">\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.INSTALL_PROFILE\"/>\n      </intent-filter>\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.SKIP_FILE\"/>\n      </intent-filter>\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.SAVE_PROFILE\"/>\n      </intent-filter>\n      <intent-filter>\n        <action android:name=\"androidx.profileinstaller.action.BENCHMARK_OPERATION\"/>\n      </intent-filter>\n    </receiver>\n  </application>\n</manifest>\n",
+      "is_signed_v1": false,
+      "is_signed_v2": true,
+      "is_signed_v3": false
+    },
+    "archive": {
+      "entry_count": 152,
+      "compressed_size": 19564361,
+      "uncompressed_size": 19628400,
+      "duplicate_entries": [],
+      "by_extension": [
+        {
+          "ext": ".dex",
+          "count": 2,
+          "bytes": 19017592
+        },
+        {
+          "ext": ".arsc",
+          "count": 1,
+          "bytes": 408380
+        },
+        {
+          "ext": ".txt",
+          "count": 2,
+          "bytes": 47489
+        },
+        {
+          "ext": ".gz",
+          "count": 1,
+          "bytes": 41394
+        },
+        {
+          "ext": ".xml",
+          "count": 29,
+          "bytes": 29984
+        },
+        {
+          "ext": ".kotlin_builtins",
+          "count": 7,
+          "bytes": 29924
+        },
+        {
+          "ext": ".so",
+          "count": 4,
+          "bytes": 22900
+        },
+        {
+          "ext": ".png",
+          "count": 52,
+          "bytes": 20499
+        },
+        {
+          "ext": ".prof",
+          "count": 1,
+          "bytes": 6807
+        },
+        {
+          "ext": ".bin",
+          "count": 1,
+          "bytes": 1738
+        },
+        {
+          "ext": ".json",
+          "count": 1,
+          "bytes": 624
+        },
+        {
+          "ext": ".version",
+          "count": 45,
+          "bytes": 331
+        },
+        {
+          "ext": ".profm",
+          "count": 1,
+          "bytes": 312
+        },
+        {
+          "ext": "(none)",
+          "count": 1,
+          "bytes": 218
+        },
+        {
+          "ext": ".properties",
+          "count": 1,
+          "bytes": 56
+        },
+        {
+          "ext": ".coroutineexceptionhandler",
+          "count": 1,
+          "bytes": 54
+        },
+        {
+          "ext": ".maindispatcherfactory",
+          "count": 1,
+          "bytes": 52
+        },
+        {
+          "ext": ".textproto",
+          "count": 1,
+          "bytes": 46
+        }
+      ],
+      "top_dirs": [
+        {
+          "dir": "classes.dex",
+          "count": 1,
+          "bytes": 12861092
+        },
+        {
+          "dir": "classes2.dex",
+          "count": 1,
+          "bytes": 6156500
+        },
+        {
+          "dir": "resources.arsc",
+          "count": 1,
+          "bytes": 408380
+        },
+        {
+          "dir": "assets",
+          "count": 4,
+          "bytes": 54608
+        },
+        {
+          "dir": "res",
+          "count": 80,
+          "bytes": 43791
+        },
+        {
+          "dir": "okhttp3",
+          "count": 2,
+          "bytes": 41612
+        },
+        {
+          "dir": "kotlin",
+          "count": 7,
+          "bytes": 29924
+        },
+        {
+          "dir": "lib",
+          "count": 4,
+          "bytes": 22900
+        },
+        {
+          "dir": "AndroidManifest.xml",
+          "count": 1,
+          "bytes": 6692
+        },
+        {
+          "dir": "DebugProbesKt.bin",
+          "count": 1,
+          "bytes": 1738
+        },
+        {
+          "dir": "kotlin-tooling-metadata.json",
+          "count": 1,
+          "bytes": 624
+        },
+        {
+          "dir": "META-INF",
+          "count": 49,
+          "bytes": 539
+        }
+      ],
+      "native_libs": [
+        {
+          "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+          "size": 7112
+        },
+        {
+          "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+          "size": 4416
+        },
+        {
+          "path": "lib/x86/libdatastore_shared_counter.so",
+          "size": 5148
+        },
+        {
+          "path": "lib/x86_64/libdatastore_shared_counter.so",
+          "size": 6224
+        }
+      ],
+      "assets": [
+        {
+          "path": "assets/dexopt/baseline.prof",
+          "size": 6807
+        },
+        {
+          "path": "assets/dexopt/baseline.profm",
+          "size": 312
+        },
+        {
+          "path": "assets/english_words.txt",
+          "size": 44942
+        },
+        {
+          "path": "assets/sinhala_words.txt",
+          "size": 2547
+        }
+      ],
+      "large_entries": [
+        {
+          "path": "classes.dex",
+          "size": 12861092
+        },
+        {
+          "path": "classes2.dex",
+          "size": 6156500
+        }
+      ],
+      "largest_dex_entropy": 6.074,
+      "native_compression": {
+        "lib/arm64-v8a/libdatastore_shared_counter.so": 0,
+        "lib/armeabi-v7a/libdatastore_shared_counter.so": 0,
+        "lib/x86/libdatastore_shared_counter.so": 0,
+        "lib/x86_64/libdatastore_shared_counter.so": 0
+      }
+    }
+  },
+  "apk_signing": {
+    "apksigner_rc": 0,
+    "apksigner_output": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v3.2 scheme (APK Signature Scheme v3.2): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nV2 Signer: certificate DN: CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK\nV2 Signer: certificate SHA-256 digest: bfffe869298e31e74dabe7923f6974b075e4ce6b73f5a7da7190e68819343a9b\nV2 Signer: certificate SHA-1 digest: 52fe1968247db436e5a90b34be9bd32f71870934\nV2 Signer: certificate MD5 digest: 09f8fdc907b5b8b0a5ce2091a3b2caba\nV2 Signer: key algorithm: RSA\nV2 Signer: key size (bits): 4096\nV2 Signer: public key SHA-256 digest: 04b1ffa026f2264654a7fa7baa6dfad8a1b4822ef021f42e495f0277cc582388\nV2 Signer: public key SHA-1 digest: 537f610bd3641fa65f17fd8ed9a6a7d42add89c7\nV2 Signer: public key MD5 digest: a38e579fc0bec2eb37ac66f4ce294e04\nWARNING: A restricted method in java.lang.System has been called\nWARNING: java.lang.System::loadLibrary has been called by org.conscrypt.NativeLibraryUtil in an unnamed module (file:/usr/local/lib/android/sdk/build-tools/37.0.0/lib/apksigner.jar)\nWARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module\nWARNING: Restricted methods will be blocked in a future release unless native access is enabled",
+    "signature_block_error": "cannot import name 'parse_apk_sigs' from 'apksigtool' (/tmp/venv/lib/python3.14/site-packages/apksigtool.py)"
+  },
+  "apk_dex": {
+    "dex_files": [
+      "classes.dex",
+      "classes2.dex"
+    ],
+    "class_count": 13142,
+    "method_count": 100150,
+    "packages_top": [
+      [
+        "androidx/compose",
+        7276
+      ],
+      [
+        "androidx/core",
+        1072
+      ],
+      [
+        "kotlinx/coroutines",
+        878
+      ],
+      [
+        "androidx/datastore",
+        569
+      ],
+      [
+        "com/nova",
+        531
+      ],
+      [
+        "kotlinx/serialization",
+        395
+      ],
+      [
+        "okhttp3/internal",
+        214
+      ],
+      [
+        "androidx/activity",
+        211
+      ],
+      [
+        "androidx/lifecycle",
+        211
+      ],
+      [
+        "kotlin/collections",
+        167
+      ],
+      [
+        "kotlin/jvm",
+        152
+      ],
+      [
+        "androidx/collection",
+        143
+      ],
+      [
+        "androidx/emoji2",
+        119
+      ],
+      [
+        "kotlin/sequences",
+        84
+      ],
+      [
+        "androidx/annotation",
+        82
+      ],
+      [
+        "kotlin/text",
+        82
+      ],
+      [
+        "kotlin/io",
+        79
+      ],
+      [
+        "kotlin/reflect",
+        58
+      ],
+      [
+        "kotlin/coroutines",
+        53
+      ],
+      [
+        "kotlin/ranges",
+        42
+      ],
+      [
+        "androidx/profileinstaller",
+        36
+      ],
+      [
+        "kotlin/time",
+        33
+      ],
+      [
+        "org/jetbrains",
+        30
+      ],
+      [
+        "org/intellij",
+        27
+      ],
+      [
+        "kotlin/internal",
+        24
+      ]
+    ],
+    "third_party": [
+      "DataStore",
+      "Jetpack Compose",
+      "Okio",
+      "coroutines",
+      "kotlinx.serialization"
+    ],
+    "risky_apis": {
+      "reflection abuse": [
+        "Ljava/lang/reflect/Constructor;",
+        "Ljava/lang/reflect/Field;",
+        "Ljava/lang/reflect/Method;"
+      ],
+      "file telemetry": [
+        "Landroid/os/Environment;"
+      ],
+      "clipboard read": [
+        "Landroid/content/ClipboardManager;"
+      ],
+      "webview": [
+        "Landroid/webkit/WebView;"
+      ],
+      "socket/network": [
+        "Lcom/nova/keyboard/ai/AiClient;",
+        "Ljava/net/Socket;",
+        "Lokhttp3/Address;"
+      ],
+      "crypto": [
+        "Landroid/security/keystore/KeyGenParameterSpec$Builder;",
+        "Ljavax/crypto/Cipher;"
+      ]
+    },
+    "url_hosts": [
+      [
+        "schemas.android.com",
+        1
+      ],
+      [
+        "api.openai.com",
+        1
+      ]
+    ],
+    "url_samples": [
+      "). Please report to Google or use https://goo.gle/compose-feedback",
+      "This is a bug in DataStore. Please file a bug at: https://issuetracker.google.com/issues/new?component=907884&template=1466542",
+      "http://schemas.android.com/apk/res/android",
+      "https://api.openai.com/v1"
+    ],
+    "error": null
+  },
+  "aab_identity": {
+    "file": "NOVA-KEYBOARD.aab",
+    "size": 6769826,
+    "sha256": "9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0",
+    "manifest": {
+      "package": "",
+      "version_name": null,
+      "version_code": null,
+      "min_sdk": null,
+      "target_sdk": null,
+      "effective_target_sdk": 1,
+      "permissions": [],
+      "declared_permissions": [],
+      "features": [],
+      "main_activity": null,
+      "activities": [],
+      "services": [],
+      "receivers": [],
+      "providers": [],
+      "application_attributes": {},
+      "manifest_xml": "<!-- manifest decode failed: Type 'NoneType' cannot be serialized. -->",
+      "is_signed_v1": false,
+      "is_signed_v2": false,
+      "is_signed_v3": false
+    }
+  },
+  "keystore": {
+    "present": true,
+    "path": "apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks",
+    "size": 4388,
+    "pkcs12_parse": "ok",
+    "keytool_rc": 0,
+    "keytool_output": "Keystore type: PKCS12\nKeystore provider: SUN\n\nYour keystore contains 1 entry\n\nAlias name: nova\nCreation date: Nov 12, 2026\nEntry type: PrivateKeyEntry\nCertificate chain length: 1\nCertificate[1]:\nOwner: CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK\nIssuer: CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK\nSerial number: 7cc4f68d3f74b4a1\nValid from: Thu Nov 12 05:03:16 UTC 2026 until: Sat Nov 04 05:03:16 UTC 2056\nCertificate fingerprints:\n\t SHA1: 52:FE:19:68:24:7D:B4:36:E5:A9:0B:34:BE:9B:D3:2F:71:87:09:34\n\t SHA256: BF:FF:E8:69:29:8E:31:E7:4D:AB:E7:92:3F:69:74:B0:75:E4:CE:6B:73:F5:A7:DA:71:90:E6:88:19:34:3A:9B\nSignature algorithm name: SHA384withRSA\nSubject Public Key Algorithm: 4096-bit RSA key\nVersion: 3\n\nExtensions: \n\n#1: ObjectId: 2.5.29.14 Criticality=false\nSubjectKeyIdentifier [\nKeyIdentifier [\n0000: F3 48 0B 90 17 E4 0D 00   BB DD D1 96 60 9E D8 8D  .H..........`...\n0010: 0B 01 35 7D                                        ..5.\n]\n]\n\n\n\n*******************************************\n*******************************************\n\n\n"
+  }
+}

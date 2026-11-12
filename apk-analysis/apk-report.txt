@@ -1,0 +1,43 @@
+NOVA KEYBOARD — STATIC ANALYSIS REPORT
+==============================================================================
+analysed: apk-analysis/bin/NOVA-KEYBOARD.apk
+analysed: apk-analysis/bin/NOVA-KEYBOARD.aab
+
+FINDINGS
+------------------------------------------------------------------------------
+[CRITICAL] signing      the release signing key (.jks) is published as a public release asset — anyone can sign malicious updates with the same identity
+           evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
+[CRITICAL] signing      the release signing key (.jks) is published as a public release asset — anyone can sign malicious updates with the same identity
+           evidence: apk-analysis/bin/NOVA-KEYBOARD-release-keystore.jks
+[HIGH    ] signing      APK is not signed with v2/v3 — hard to verify, vulnerable to tampering
+[MEDIUM  ] manifest     android:allowBackup is None; user data can leave the device via backup
+[LOW     ] network      no network security config (no certificate pinning / domain allowlist)
+[LOW     ] network      usesCleartextTraffic not set → defaults to true on API < 28
+[LOW     ] network      no network security config (no certificate pinning / domain allowlist)
+[INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
+[INFO    ] permissions  no intrusive permissions; only network/vibrate/network-state if listed
+[INFO    ] permissions  INTERNET is present — expected for AI Studio, but the IME can therefore reach the network
+[INFO    ] privacy      no advertising or analytics SDK classes detected in the DEX
+[INFO    ] permissions  no intrusive permissions; only network/vibrate/network-state if listed
+
+MACHINE-READABLE SUMMARY
+------------------------------------------------------------------------------
+apk_identity: package=com.nova.keyboard version=1.0.0 code=1 minSdk=29 targetSdk=34 sha256=7a5a9da9cfb1356f55507df51e0feac7945a467ffe0fd86667092d40d2c2e7c9
+    entries=152 raw=18.7MB native=4 dex_entropy=6.074
+    top dirs: classes.dex=12.3MB, classes2.dex=5.9MB, resources.arsc=398.8KB, assets=53.3KB, res=42.8KB, okhttp3=40.6KB
+    extensions: .dex=2, .arsc=1, .txt=2, .gz=1, .xml=29, .kotlin_builtins=7, .so=4, .png=52
+    Verifies
+    Verified using v1 scheme (JAR signing): false
+    Verified using v2 scheme (APK Signature Scheme v2): true
+    Verified using v3 scheme (APK Signature Scheme v3): false
+    Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+    Verified using v3.2 scheme (APK Signature Scheme v3.2): false
+    Verified using v4 scheme (APK Signature Scheme v4): false
+    Verified for SourceStamp: false
+    Number of signers: 1
+    V2 Signer: certificate DN: CN=NOVA KEYBOARD, OU=Release, O=NOVA, L=Colombo, ST=Western, C=LK
+    V2 Signer: certificate SHA-256 digest: bfffe869298e31e74dabe7923f6974b075e4ce6b73f5a7da7190e68819343a9b
+    V2 Signer: certificate SHA-1 digest: 52fe1968247db436e5a90b34be9bd32f71870934
+    V2 Signer: certificate MD5 digest: 09f8fdc907b5b8b0a5ce2091a3b2caba
+    V2 Signer: key algorithm: RSA
+aab_identity: package= version=None code=None minSdk=None targetSdk=None sha256=9e09b4aa27850ae41f3ba03e8c978ed5e37867066a3aa41c4ed43930d89804a0
