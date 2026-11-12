@@ -93,13 +93,22 @@ jobs:
           git config user.name "nova-analysis-bot"
           git config user.email "analysis@nova.local"
           rm -rf "$OUT/bin"
+          mkdir -p "$OUT/bin"
           printf 'shipping binaries are kept out of git\n' > "$OUT/bin/.gitkeep"
           git add -f "$OUT"
           if git diff --cached --quiet; then echo "no report changes"; exit 0; fi
           git commit -m "analysis: APK/AAB static analysis report"
           for i in 1 2 3 4 5; do
-            git pull --rebase --autostash -q || true
-            git push origin "HEAD:refs/heads/$BRANCH" && { echo PUSH_OK; exit 0; }
+            if git push origin "HEAD:refs/heads/$BRANCH"; then echo PUSH_OK; exit 0; fi
+            git fetch -q origin "$BRANCH"
+            git rebase -q "origin/$BRANCH" || git rebase --abort
             sleep 10
           done
-          echo PUSH_FAIL; exit 1
+          echo "PUSH_FAIL - report is in the job summary instead"
+          {
+            echo "## APK analysis report (push failed, inline copy)"
+            echo '```'
+            cat "$OUT/apk-report.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
