@@ -1,9 +1,7 @@
 unit tests: success
 assemble:   success
-commit:     d8512b2b7cb83ee3b1a7cdb5fd47830392d2170c
+commit:     9297a1c2aa7eb60e329b13f90c5861c36478e7ea
 --- unit-tests.log ---
-Downloading https://services.gradle.org/distributions/gradle-8.7-bin.zip
-............10%.............20%.............30%.............40%............50%.............60%.............70%.............80%.............90%............100%
 
 Welcome to Gradle 8.7!
 
@@ -19,56 +17,67 @@ Starting a Gradle Daemon (subsequent builds will be faster)
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:checkDebugAarMetadata
-> Task :app:generateDebugResValues
+> Task :app:generateDebugResValues FROM-CACHE
 > Task :app:mapDebugSourceSetPaths
-> Task :app:generateDebugResources
-> Task :app:mergeDebugResources
-> Task :app:packageDebugResources
-> Task :app:parseDebugLocalResources
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
 > Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug
-> Task :app:processDebugMainManifest
-> Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
-> Task :app:processDebugResources
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:processDebugResources FROM-CACHE
 
 > Task :app:compileDebugKotlin
-w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/ConfigScreens.kt:243:17 Variable 'clipboard' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:101:13 Variable 'lastConsonantToken' is assigned but never accessed
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:123:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:151:21 The value '"n"' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:164:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:171:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:180:17 The value 'cons.first' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:189:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:197:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:206:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:212:13 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/ConfigScreens.kt:245:17 Variable 'clipboard' is never used
 w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/keyboard/KeyboardRootView.kt:86:46 Parameter 'animate' is never used
 
-> Task :app:javaPreCompileDebug
+> Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:compileDebugJavaWithJavac NO-SOURCE
 > Task :app:bundleDebugClassesToRuntimeJar
 > Task :app:bundleDebugClassesToCompileJar
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes
+> Task :app:processDebugUnitTestJavaRes
 
-> Task :app:compileDebugUnitTestKotlin FAILED
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:3:30 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:11:31 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:12:31 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:18:26 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:19:26 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:20:26 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:25:31 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:31:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:32:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:33:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:38:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:43:56 Unresolved reference: TextEditing
+> Task :app:testDebugUnitTest
+
+com.nova.keyboard.SinhalaTransliteratorTest > anusvara and non letter characters pass through FAILED
+    java.lang.AssertionError at SinhalaTransliteratorTest.kt:33
+
+com.nova.keyboard.SinhalaTransliteratorTest > n before a stop becomes the homorganic nasal FAILED
+    org.junit.ComparisonFailure at SinhalaTransliteratorTest.kt:69
+
+58 tests completed, 2 failed
+
+> Task :app:testDebugUnitTest FAILED
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':app:compileDebugUnitTestKotlin'.
-> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-   > Compilation error. See log for more details
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/build/reports/tests/testDebugUnitTest/index.html
 
 * Try:
-> Run with --info or --debug option to get more log output.
 > Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugUnitTestKotlin'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:testDebugUnitTest'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:282)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
@@ -131,18 +140,20 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:com
 	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
-Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
-	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:287)
-	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
-	at org.gradle.internal.Factories$1.create(Factories.java:31)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:336)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:319)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:324)
-	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
-	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
-	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
-	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:252)
+Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/build/reports/tests/testDebugUnitTest/index.html
+	at org.gradle.api.tasks.testing.AbstractTestTask.handleTestFailures(AbstractTestTask.java:691)
+	at org.gradle.api.tasks.testing.AbstractTestTask.handleCollectedResults(AbstractTestTask.java:533)
+	at org.gradle.api.tasks.testing.AbstractTestTask.executeTests(AbstractTestTask.java:528)
+	at org.gradle.api.tasks.testing.Test.executeTests(Test.java:715)
+	at com.android.build.gradle.tasks.factory.AndroidUnitTest.executeTests(AndroidUnitTest.java:163)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.doExecute(StandardTaskAction.java:58)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:244)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
@@ -293,42 +304,10 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:198)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
-Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
-	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:20)
-	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:141)
-	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:73)
-	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
-	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
-	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
-	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
-	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
-	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
-	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:200)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:195)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
-	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
-	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
-	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
-	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:187)
-	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:120)
-	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:162)
-	at org.gradle.internal.Factories$1.create(Factories.java:31)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:264)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:128)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:133)
-	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:157)
-	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:126)
-	... 2 more
 
 
-BUILD FAILED in 1m 48s
-19 actionable tasks: 19 executed
+BUILD FAILED in 39s
+23 actionable tasks: 11 executed, 12 from cache
 --- assemble.log ---
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
@@ -354,16 +333,16 @@ BUILD FAILED in 1m 48s
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets
-> Task :app:compressDebugAssets
-> Task :app:desugarDebugFileDependencies
+> Task :app:compressDebugAssets FROM-CACHE
+> Task :app:desugarDebugFileDependencies FROM-CACHE
 > Task :app:dexBuilderDebug
-> Task :app:mergeDebugGlobalSynthetics
-> Task :app:processDebugJavaRes
+> Task :app:mergeDebugGlobalSynthetics FROM-CACHE
+> Task :app:processDebugJavaRes UP-TO-DATE
 > Task :app:mergeDebugJavaResource
 > Task :app:checkDebugDuplicateClasses
 > Task :app:mergeDebugStartupProfile
-> Task :app:mergeExtDexDebug
-> Task :app:mergeLibDexDebug
+> Task :app:mergeExtDexDebug FROM-CACHE
+> Task :app:mergeLibDexDebug FROM-CACHE
 > Task :app:mergeProjectDexDebug
 > Task :app:mergeDebugJniLibFolders
 > Task :app:mergeDebugNativeLibs
@@ -378,19 +357,17 @@ Unable to strip the following libraries, packaging them as they are: libdatastor
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 48s
-37 actionable tasks: 22 executed, 15 up-to-date
-w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/ConfigScreens.kt:243:17 Variable 'clipboard' is never used
+BUILD SUCCESSFUL in 10s
+37 actionable tasks: 16 executed, 5 from cache, 16 up-to-date
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:101:13 Variable 'lastConsonantToken' is assigned but never accessed
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:123:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:151:21 The value '"n"' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:164:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:171:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:180:17 The value 'cons.first' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:189:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:197:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:206:17 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/language/SinhalaTransliterator.kt:212:13 The value '""' assigned to 'var lastConsonantToken: String defined in com.nova.keyboard.language.SinhalaTransliterator.transliterate' is never used
+w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/ConfigScreens.kt:245:17 Variable 'clipboard' is never used
 w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/keyboard/KeyboardRootView.kt:86:46 Parameter 'animate' is never used
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:3:30 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:11:31 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:12:31 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:18:26 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:19:26 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:20:26 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:25:31 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:31:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:32:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:33:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:38:25 Unresolved reference: TextEditing
-e: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/test/java/com/nova/keyboard/TextEditingTest.kt:43:56 Unresolved reference: TextEditing
