@@ -126,7 +126,10 @@ object WijesekaraEngine {
         // space produced "ෙ" glued to an empty syllable.
         if (value.length == 1 && (value[0].isWhitespace() || value[0].isDigit() ||
                 value in TIGHT_PUNCTUATION)) {
-            return Output(State(), (state.composing + value).ifEmpty { null })
+            // A pending kombuva has no consonant to attach to: emit it as typed
+            // instead of dropping the character.
+            val prebase = if (state.pendingPrebase) KOMBUVA else ""
+            return Output(State(), (state.composing + prebase + value).ifEmpty { null })
         }
 
         // Any other glyph (vowel sign, anusvara, punctuation) closes the vowel slot.

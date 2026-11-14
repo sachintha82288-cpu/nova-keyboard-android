@@ -35,12 +35,26 @@ object TextEditing {
     /** How many characters one backspace should remove, keeping surrogate pairs whole. */
     fun backspaceLength(window: String, requested: Int = 1): Int {
         var count = minOf(requested, window.length)
-        if (count == 1 && window.length >= 2 &&
-            Character.isLowSurrogate(window[window.length - 1]) &&
-            Character.isHighSurrogate(window[window.length - 2])
-        ) {
-            count = 2
+        if (count <= 0) return 0
+        // Walk back over complete UTF-16 units. The old version only checked the
+        // one-character case, so backspace auto-repeat (count > 1) could still cut
+        // an emoji in half and leave a lone surrogate in the text field.
+        val windowChars = window.toCharArray()
+        var cursor = windowChars.size
+        var taken = 0
+        while (taken < count && cursor > 0) {
+            if (cursor >= 2 && Character.isLowSurrogate(windowChars[cursor - 1]) &&
+                Character.isHighSurrogate(windowChars[cursor - 2])
+            ) {
+                cursor -= 2
+                taken += 2
+            } else {
+                cursor -= 1
+                taken += 1
+            }
         }
-        return count
+        // `taken` counts both halves of a surrogate pair, so it is the number of
+        // characters the editor must delete.
+        return taken.coerceAtMost(window.length)
     }
 }
