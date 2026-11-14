@@ -7,11 +7,12 @@ name: Build
 on:
   push:
     branches: ["**"]
+    paths-ignore: [".ci/**"]
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -27,13 +28,6 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Show preinstalled Android SDK
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          ls "$ANDROID_HOME/platforms" || true
-          ls "$ANDROID_HOME/build-tools" || true
-
       - name: Accept SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
 
@@ -47,10 +41,35 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+        id: tests
+        continue-on-error: true
+        run: ./gradlew :app:testDebugUnitTest --stacktrace --console=plain 2>&1 | tee /tmp/unit-tests.log
 
       - name: Assemble debug
-        run: ./gradlew :app:assembleDebug --stacktrace
+        id: assemble
+        if: steps.tests.outcome == 'success'
+        continue-on-error: true
+        run: ./gradlew :app:assembleDebug --stacktrace --console=plain 2>&1 | tee /tmp/assemble.log
+
+      - name: Publish log for the agent
+        if: always()
+        run: |
+          mkdir -p .ci
+          {
+            echo "unit tests: ${{ steps.tests.outcome }}"
+            echo "assemble:   ${{ steps.assemble.outcome }}"
+            echo "commit:     ${{ github.sha }}"
+            echo "--- unit-tests.log ---"
+            tail -n 400 /tmp/unit-tests.log 2>/dev/null || echo "(no log)"
+            echo "--- assemble.log ---"
+            tail -n 200 /tmp/assemble.log 2>/dev/null || echo "(no log)"
+          } > .ci/last-build.log
+          grep -E "^(e: |w: )" /tmp/unit-tests.log 2>/dev/null | head -40 >> .ci/last-build.log || true
+          git config user.name  "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -f .ci/last-build.log
+          git commit -m "ci: build log [skip ci]" || true
+          git push || true
 
       - name: Upload test results
         if: always()
@@ -61,8 +80,13 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload debug APK
+        if: steps.assemble.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: nova-keyboard-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Fail if a step failed
+        if: steps.tests.outcome != 'success' || steps.assemble.outcome == 'failure'
+        run: exit 1
