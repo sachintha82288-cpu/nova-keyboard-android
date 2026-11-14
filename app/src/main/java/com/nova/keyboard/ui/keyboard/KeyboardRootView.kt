@@ -83,7 +83,7 @@ class KeyboardRootView(context: Context) : LinearLayout(context) {
 
     private var lastRows: List<List<KeySpec>> = emptyList()
 
-    fun setLayout(rows: List<List<KeySpec>>, animate: Boolean = false) {
+    fun setLayout(rows: List<List<KeySpec>>) {
         lastRows = rows
         hidePanel()
         keyRows.removeAllViews()

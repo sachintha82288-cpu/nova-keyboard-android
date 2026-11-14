@@ -242,7 +242,6 @@ fun AiStudioScreen() {
             ) { Text("Remove API key") }
         }
         item {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             Text(
                 "Tip: provider keys are created in your provider's dashboard. NOVA never bundles a key.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
