@@ -1,6 +1,6 @@
 unit tests: success
 assemble:   success
-commit:     a58cbb116dec151f6e9c42677599ce8de411124b
+commit:     719c680dcd589f94e62856566466f7e357f2d077
 --- unit-tests.log ---
 
 Welcome to Gradle 8.7!
@@ -25,19 +25,16 @@ Starting a Gradle Daemon (subsequent builds will be faster)
 > Task :app:parseDebugLocalResources FROM-CACHE
 > Task :app:createDebugCompatibleScreenManifests
 > Task :app:extractDeepLinksDebug FROM-CACHE
-> Task :app:processDebugMainManifest
-> Task :app:processDebugManifest
-> Task :app:processDebugManifestForPackage
-> Task :app:processDebugResources
-
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:processDebugResources FROM-CACHE
 > Task :app:compileDebugKotlin
-w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/ConfigScreens.kt:126:9 Variable 'context' is never used
-
 > Task :app:javaPreCompileDebug FROM-CACHE
 > Task :app:compileDebugJavaWithJavac NO-SOURCE
 > Task :app:bundleDebugClassesToRuntimeJar
 > Task :app:bundleDebugClassesToCompileJar
-> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestKotlin FROM-CACHE
 > Task :app:preDebugUnitTestBuild UP-TO-DATE
 > Task :app:javaPreCompileDebugUnitTest FROM-CACHE
 > Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
@@ -45,8 +42,8 @@ w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/
 > Task :app:processDebugUnitTestJavaRes
 > Task :app:testDebugUnitTest
 
-BUILD SUCCESSFUL in 45s
-23 actionable tasks: 15 executed, 8 from cache
+BUILD SUCCESSFUL in 43s
+23 actionable tasks: 10 executed, 13 from cache
 --- assemble.log ---
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
@@ -96,6 +93,5 @@ Unable to strip the following libraries, packaging them as they are: libdatastor
 > Task :app:createDebugApkListingFileRedirect
 > Task :app:assembleDebug
 
-BUILD SUCCESSFUL in 7s
+BUILD SUCCESSFUL in 11s
 37 actionable tasks: 16 executed, 5 from cache, 16 up-to-date
-w: file:///home/runner/work/nova-keyboard-android/nova-keyboard-android/app/src/main/java/com/nova/keyboard/ui/ConfigScreens.kt:126:9 Variable 'context' is never used
