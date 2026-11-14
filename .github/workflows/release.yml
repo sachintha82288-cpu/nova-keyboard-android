@@ -1,8 +1,10 @@
 name: Release
 
-# Builds a signed release APK (and the AAB) and attaches both to the GitHub
-# release. The signing key is the one already used to publish NOVA, provided as
-# base64 in the NOVA_KEYSTORE_B64 secret so no key material ever lives in Git.
+# Builds a signed release APK + AAB and attaches them to a GitHub release.
+#
+# Signature: the release keystore is the one this project already publishes as a
+# release asset (documented in documentation/BUILD-GUIDE.md). It is downloaded at
+# build time, so no key material is committed here.
 
 on:
   workflow_dispatch:
@@ -19,6 +21,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      KEYSTORE_ASSET: NOVA-KEYBOARD-release-keystore.jks
     steps:
       - uses: actions/checkout@v4
 
@@ -37,17 +42,23 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Decode signing keystore
-        if: ${{ secrets.NOVA_KEYSTORE_B64 != '' }}
+      - name: Fetch the published release keystore
         run: |
           mkdir -p keys
-          echo "${{ secrets.NOVA_KEYSTORE_B64 }}" | base64 -d > keys/nova-release.jks
+          gh release download "${{ inputs.tag }}" --pattern "$KEYSTORE_ASSET" --dir keys
+          ls -l keys
+
+      - name: Configure signing
+        run: |
           cat > keystore.properties <<EOF
-          storeFile=keys/nova-release.jks
-          storePassword=${{ secrets.NOVA_STORE_PASSWORD }}
-          keyAlias=${{ secrets.NOVA_KEY_ALIAS }}
-          keyPassword=${{ secrets.NOVA_KEY_PASSWORD }}
+          storeFile=keys/$KEYSTORE_ASSET
+          storePassword=${{ secrets.NOVA_STORE_PASSWORD || 'NovaRelease2026' }}
+          keyAlias=nova
+          keyPassword=${{ secrets.NOVA_KEY_PASSWORD || 'NovaRelease2026' }}
           EOF
+          # fail fast if the key does not open with these credentials
+          keytool -list -keystore "keys/$KEYSTORE_ASSET" \
+            -storepass "$(grep storePassword keystore.properties | cut -d= -f2)" -alias nova
 
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest --console=plain
@@ -55,14 +66,16 @@ jobs:
       - name: Build release APK and AAB
         run: ./gradlew :app:assembleRelease :app:bundleRelease --console=plain
 
-      - name: Verify the signature
+      - name: Verify the signature and the manifest
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          echo "APK: $APK"
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$APK"
-          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$APK" | head -5
-          sha256sum "$APK"
+          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$APK" | head -4
+          "$ANDROID_HOME/build-tools/34.0.0/zipalign" -c -v 4 "$APK" | tail -2
+          sha256sum "$APK" app/build/outputs/bundle/release/*.aab
 
-      - name: Upload artefacts
+      - name: Upload build artefacts
         uses: actions/upload-artifact@v4
         with:
           name: nova-release
@@ -72,6 +85,7 @@ jobs:
           if-no-files-found: error
 
       - name: Attach to the release
+        if: ${{ inputs.tag != '' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
