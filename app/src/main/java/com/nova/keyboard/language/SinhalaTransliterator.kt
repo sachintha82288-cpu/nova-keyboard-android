@@ -18,8 +18,9 @@ package com.nova.keyboard.language
  * Two rules make the output real Sinhala instead of "consonants in a row":
  *  - a word-final consonant is followed by al-lakuna, otherwise the inherent
  *    vowel would be read: `ran` is රන්, not රන;
- *  - "n" before a stop consonant of the same place becomes the homorganic
- *    nasal: `sinhala` is සිංහල, `Kandy` is කැන්ඩි.
+ *  - "n" before "g" or "h" becomes the anusvara: `sinhala` is සිංහල,
+ *    `lanka` is ලංක. Other nasal+stop clusters are deliberately left literal
+ *    (see the note in [transliterate]).
  */
 object SinhalaTransliterator {
 
@@ -47,17 +48,6 @@ object SinhalaTransliterator {
         "f" to "\u0DC6"
     )
 
-    /**
-     * - `n` before a consonant of a different place is the retroflex ණ:
-     *   `ran` is රන්, `pissa` keeps න, `Kandy` is කැන්ඩි.
-     * - the three Sinhala nasals `ng`, `ny`, `n` were previously mapped to
-     *   ඞ/ඤ/ණ, which made ordinary words (`sinhala`, `yanna`) unreadable.
-     */
-    private val nasalNg = "\u0D82"          // ං anusvara
-    private val nasalNy = "\u0DA4"          // ඤ
-    private val nasalN = "\u0DB1"           // න
-    private val nasalRetroflex = "\u0DAB"   // ණ
-    private val nasalM = "\u0DB8"           // ම
 
     private val independentVowels = listOf(
         "aee" to "\u0D88", "aa" to "\u0D86", "ae" to "\u0D87", "ai" to "\u0D93",
@@ -73,15 +63,13 @@ object SinhalaTransliterator {
         "u" to "\u0DD4"
     ).sortedByDescending { it.first.length }
 
-    /** Consonants that DROP a following inherent vowel, grouped by articulation class. */
-    private val stopGroups = mapOf(
-        "\u0DB1" to "ttd",          // n + dental/alveolar stop stays න
-        "\u0DAB" to ""
-    )
-
     fun isConsonantChar(ch: Char): Boolean = ch in '\u0D9A'..'\u0DC6' && ch != '\u0DCA'
 
     fun isSignChar(ch: Char): Boolean = VOWEL_SIGNS.indexOf(ch) >= 0
+
+    /** Roman vowels, including the ones that only appear inside a diphthong. */
+    private fun isVowelLetter(ch: Char): Boolean = ch in "aeiouA"
+
 
     /**
      * Digits and punctuation pass through untouched. Roman letters are folded to
@@ -97,8 +85,6 @@ object SinhalaTransliterator {
         var i = 0
         // true while the last emitted glyph is a bare consonant that can still take a sign
         var openConsonant = false
-        // the romanised token that produced the open consonant, used for nasal rules
-        var lastConsonantToken = ""
 
         fun closeOpenConsonant() {
             if (openConsonant) {
@@ -109,7 +95,14 @@ object SinhalaTransliterator {
 
         // Fold to lower case so capitalised Singlish still converts, but keep the
         // `n`/`N` and `t`/`T` distinction that the schema is built on.
-        val folded = input.map { if (it in 'A'..'Z' && it !in "NDT") it.lowercaseChar() else it }.joinToString("")
+        val folded = input.map {
+            when {
+                // M (anusvara) and H (visarga) are code letters, not capitals.
+                it == 'M' || it == 'H' -> it
+                it in 'A'..'Z' -> it.lowercaseChar()
+                else -> it
+            }
+        }.joinToString("")
 
         while (i < folded.length) {
             val rest = folded.substring(i)
@@ -120,37 +113,21 @@ object SinhalaTransliterator {
                 // rather than silently mangled into Sinhala letters.
                 closeOpenConsonant()
                 out.append(ch)
-                lastConsonantToken = ""
                 i += 1
                 continue
             }
 
-            // Homorganic nasal: "n" + a stop consonant of the same place.
-            if (ch == 'n' || ch == 'N') {
-                val nasal = when {
-                    rest.startsWith("nh") -> "ng"
-                    rest.startsWith("nng") -> "ng"
-                    rest.startsWith("ndh") -> "nd"
-                    rest.startsWith("nd") || rest.startsWith("nt") || rest.startsWith("nth") -> "nd"
-                    rest.startsWith("nj") -> "nj"
-                    rest.startsWith("ng") -> "ng"
-                    rest.startsWith("nk") || rest.startsWith("nkh") -> "ng"
-                    rest.startsWith("nch") -> "nj"
-                    rest.startsWith("nb") || rest.startsWith("nB") -> "nb"
-                    else -> null
-                }
-                if (nasal != null) {
-                    closeOpenConsonant()
-                    when (nasal) {
-                        "ng" -> out.append(nasalNg)      // සිංහල (sinhala), ශ්‍රී ලංකා
-                        "nj" -> out.append(nasalNy)      // කැන්ඩි / අඤ්…
-                        "nb" -> out.append(nasalM)       // අම්බලම්
-                        else -> out.append(nasalN)       // කැන්ඩි (Kandy), තාන්ත
-                    }
-                    i += 1
-                    lastConsonantToken = "n"
-                    // the stop that follows becomes an al-lakuna + consonant
+            // Ambiguous clusters are intentionally *not* guessed: Singlish "nd" can
+            // be න්ද or න්ඩ, and a wrong guess is worse than a literal reading. The
+            // two unambiguous nasals are handled here.
+            if (ch == 'n' && rest.length > 1) {
+                if (rest.startsWith("ng") || rest.startsWith("nk") || rest.startsWith("nh")) {
+                    // Only the nasal merges. The preceding consonant keeps no
+                    // al-lakuna (ලංක, not ල්ංක) and the next consonant is still
+                    // emitted normally (සිංහල, ලංක).
+                    out.append(ANUSVARA)
                     openConsonant = false
+                    i += 1
                     continue
                 }
             }
@@ -161,14 +138,12 @@ object SinhalaTransliterator {
                 closeOpenConsonant()
                 out.append("\u0DC1\u0DCA\u200D\u0DBB\u0DD3")
                 i += if (rest.startsWith("shrii")) 5 else 4
-                lastConsonantToken = ""
                 continue
             }
             if (rest.startsWith("shri") || rest.startsWith("sri")) {
                 closeOpenConsonant()
                 out.append("\u0DC1\u0DCA\u200D\u0DBB\u0DD3")
                 i += if (rest.startsWith("shri")) 4 else 3
-                lastConsonantToken = ""
                 continue
             }
 
@@ -177,7 +152,6 @@ object SinhalaTransliterator {
                 closeOpenConsonant()
                 out.append(cons.second)
                 openConsonant = true
-                lastConsonantToken = cons.first
                 i += cons.first.length
                 continue
             }
@@ -186,7 +160,6 @@ object SinhalaTransliterator {
             if (sign != null && openConsonant) {
                 out.append(sign.second)
                 openConsonant = false
-                lastConsonantToken = ""
                 i += sign.first.length
                 continue
             }
@@ -194,7 +167,6 @@ object SinhalaTransliterator {
             // A bare "a" after a consonant is the inherent vowel: no codepoint at all.
             if (openConsonant && ch == 'a') {
                 openConsonant = false
-                lastConsonantToken = ""
                 i += 1
                 continue
             }
@@ -203,16 +175,30 @@ object SinhalaTransliterator {
             if (indep != null) {
                 closeOpenConsonant()
                 out.append(indep.second)
-                lastConsonantToken = ""
                 i += indep.first.length
                 continue
             }
 
             closeOpenConsonant()
-            lastConsonantToken = ""
             when {
-                rest.startsWith("M") -> { out.append(ANUSVARA); i += 1 }
-                rest.startsWith("H") -> { out.append(VISARGA); i += 1 }
+                // M and H are anusvara/visarga only where they cannot be an
+                // ordinary letter: before a consonant or at the end of a word.
+                rest.startsWith("M") -> {
+                    if (i + 1 < folded.length && isVowelLetter(folded[i + 1])) {
+                        out.append("\u0DB8"); openConsonant = true
+                    } else {
+                        out.append(ANUSVARA)
+                    }
+                    i += 1
+                }
+                rest.startsWith("H") -> {
+                    if (i + 1 < folded.length && isVowelLetter(folded[i + 1])) {
+                        out.append("\u0DC4"); openConsonant = true
+                    } else {
+                        out.append(VISARGA)
+                    }
+                    i += 1
+                }
                 rest.startsWith("~") -> { out.append(HAL); i += 1 }
                 else -> { out.append(input[i]); i += 1 }
             }
