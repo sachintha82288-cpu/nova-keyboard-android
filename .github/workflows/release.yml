@@ -85,21 +85,28 @@ jobs:
           "$ANDROID_HOME/build-tools/34.0.0/zipalign" -c -v 4 "$APK" | tail -2
           sha256sum "$APK" app/build/outputs/bundle/release/*.aab
 
+      - name: Package the release assets
+        run: |
+          mkdir -p dist
+          cp "$(ls app/build/outputs/apk/release/*.apk | head -1)"   dist/NOVA-KEYBOARD.apk
+          cp "$(ls app/build/outputs/bundle/release/*.aab | head -1)" dist/NOVA-KEYBOARD.aab
+          # source and documentation archives for this exact commit
+          git archive --format=zip --prefix=NOVA-KEYBOARD-source/ -o dist/NOVA-KEYBOARD-source.zip HEAD
+          ( cd documentation && zip -q -r "$GITHUB_WORKSPACE/dist/NOVA-KEYBOARD-documentation.zip" . )
+          ( cd "$GITHUB_WORKSPACE/dist" && sha256sum NOVA-KEYBOARD.apk NOVA-KEYBOARD.aab > checksums.txt )
+          ls -l dist && cat dist/checksums.txt
+
       - name: Publish onto the release (replacing old artefacts)
         run: |
-          gh release upload "$TAG" \
-            app/build/outputs/apk/release/*.apk \
-            app/build/outputs/bundle/release/*.aab \
-            --clobber
-          sha256sum app/build/outputs/apk/release/*.apk app/build/outputs/bundle/release/*.aab \
-            | sed 's|app/build/outputs/[a-z]*/[a-z]*/||' > /tmp/checksums.txt
-          gh release upload "$TAG" /tmp/checksums.txt --clobber
+          # old, differently-named artefacts are removed so the release has one APK
+          for old in app-release.apk app-release.aab; do
+            gh release delete-asset "$TAG" "$old" --yes || true
+          done
+          gh release upload "$TAG" dist/* --clobber
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v4
         with:
           name: nova-release
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+          path: dist/*
           if-no-files-found: error
