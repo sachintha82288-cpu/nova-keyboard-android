@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -483,6 +485,8 @@ fun PrivacyScreen() {
 @Composable
 fun AboutScreen() {
     val context = LocalContext.current
+    var crashRefresh by remember { mutableIntStateOf(0) }
+    val crashLog = remember(crashRefresh) { com.nova.keyboard.core.CrashReporter.lastCrash(context) }
     val version = remember {
         runCatching {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -497,6 +501,38 @@ fun AboutScreen() {
                 Spacer(Modifier.height(10.dp))
                 Text("Version " + version + " (build 1)", color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
                 Text("Package " + context.packageName, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            }
+        }
+        item {
+            if (crashLog != null) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        "LAST CRASH LOG",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Long-press the text to copy it and send it back \u2014 it is the fastest way to fix the crash.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 11.sp
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    SelectionContainer {
+                        Text(
+                            crashLog,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick = {
+                        com.nova.keyboard.core.CrashReporter.clear(context)
+                        crashRefresh++
+                    }) { Text("Clear crash log", fontSize = 12.sp) }
+                }
             }
         }
         item {

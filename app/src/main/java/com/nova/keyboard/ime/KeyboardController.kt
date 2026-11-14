@@ -7,7 +7,6 @@ import android.inputmethodservice.InputMethodService
 import com.nova.keyboard.ai.AiPrompts
 import com.nova.keyboard.ai.AiResult
 import com.nova.keyboard.core.ServiceLocator
-import com.nova.keyboard.data.Snippet
 import com.nova.keyboard.language.SinhalaTransliterator
 import com.nova.keyboard.language.WijesekaraEngine
 import com.nova.keyboard.theme.BuiltInThemes
@@ -63,7 +62,16 @@ class KeyboardController(
 
     // ---------------------------------------------------------------- lifecycle
 
+    /**
+     * A keyboard must never crash the app it is typing into, so the two entry
+     * points from the framework are guarded: a failure loses one key press or
+     * one layout refresh, not the user's session.
+     */
     fun onStartInput(info: android.view.inputmethod.EditorInfo?) {
+        runCatching { startInput(info) }
+    }
+
+    private fun startInput(info: android.view.inputmethod.EditorInfo?) {
         profile = EditorTypeDetector.detect(info)
         page = if (profile.isNumber) Page.NUMBERS else Page.LETTERS
         shift = 0
@@ -71,10 +79,15 @@ class KeyboardController(
         phoneticBuffer = ""
         lastWord = ""
         alternatesMode = false
+        lastKeyWasSpace = false
+        lastSpaceAt = 0L
+        currentResult = ""
+        aiPanel = null
         applyTheme()
         refresh()
         updateAutoShift()
         root.clearSuggestions()
+        applyOneHanded()
         captureClipboard()
     }
 
@@ -140,13 +153,23 @@ class KeyboardController(
     // ------------------------------------------------------------------- input
 
     private fun onKey(spec: KeySpec) {
+        runCatching { handleKey(spec) }
+    }
+
+    private fun handleKey(spec: KeySpec) {
         when (spec.code) {
             KeyCode.SHIFT -> {
                 shift = if (shift == 0) 1 else if (shift == 1) 2 else 0
                 refresh()
             }
-            KeyCode.BACKSPACE -> onBackspace()
-            KeyCode.ENTER -> onEnter()
+            KeyCode.BACKSPACE -> {
+                lastKeyWasSpace = false
+                onBackspace()
+            }
+            KeyCode.ENTER -> {
+                lastKeyWasSpace = false
+                onEnter()
+            }
             KeyCode.SPACE -> onSpace()
             KeyCode.LANG -> toggleLanguage()
             KeyCode.EMOJI -> showEmojiPanel()
@@ -201,10 +224,20 @@ class KeyboardController(
                 if (wijeState.composing.isEmpty()) session.finishComposing()
                 else session.setComposing(wijeState.composing)
                 root.clearSuggestions()
+                // Shift used to stay latched on the Sinhala layers: the next letter
+                // silently came from the shifted row and the keyboard looked "stuck".
+                if (shift == 1) {
+                    shift = 0
+                    refresh()
+                }
             }
             s.language == "si" -> {
                 phoneticBuffer += value
                 updatePhonetic()
+                if (shift == 1) {
+                    shift = 0
+                    refresh()
+                }
             }
             else -> {
                 val cased = if (shift > 0 && value.length == 1 && value[0].isLetter()) value.uppercase() else value
@@ -228,13 +261,18 @@ class KeyboardController(
             val trimmed = wijeState.composing.dropLast(1)
             wijeState = WijesekaraEngine.State(trimmed, false)
             if (trimmed.isEmpty()) session.finishComposing() else session.setComposing(trimmed)
+            updateSuggestions()
             return
+        }
+        if (s.language == "si" && s.sinhalaInputMethod == "wijesekara" && wijeState.pendingPrebase) {
+            wijeState = WijesekaraEngine.State()
         }
         session.deleteBackward()
         updateSuggestions()
     }
 
     private fun onEnter() {
+        alternatesMode = false
         if (wijeState.composing.isNotEmpty()) {
             session.commit(wijeState.composing)
             wijeState = WijesekaraEngine.State()
@@ -245,6 +283,7 @@ class KeyboardController(
 
     private fun onSpace() {
         val s = prefs
+        alternatesMode = false
 
         if (phoneticBuffer.isNotEmpty()) {
             commitPhonetic(SinhalaTransliterator.transliterate(phoneticBuffer))
@@ -282,9 +321,21 @@ class KeyboardController(
 
         val now = System.currentTimeMillis()
         if (s.doubleSpacePeriod && lastKeyWasSpace && now - lastSpaceAt < 700) {
-            session.deleteBackward(1)
-            session.commit(". ")
+            // Previous press already inserted a space: swap that trailing space for
+            // ". ". The old code deleted one character blindly *after* autocorrect had
+            // rewritten the word, which produced "word. " only by luck and
+            // "word.. " when autocorrect had just replaced the word.
+            val before = session.textBeforeCursor(2)
+            if (before.endsWith(" ")) {
+                session.deleteBackward(1)
+                session.commit(". ")
+            } else {
+                session.commit(". ")
+            }
             lastKeyWasSpace = false
+            lastSpaceAt = 0L
+            updateAutoShift()
+            updateSuggestions()
             return
         }
 
@@ -292,11 +343,20 @@ class KeyboardController(
         lastKeyWasSpace = true
         lastSpaceAt = now
 
-        if (s.learningEnabled && !profile.isSensitive && word.length > 1) {
-            ServiceLocator.scope.launch {
-                ServiceLocator.suggestions.learn(word, s.language, lastWord)
-            }
+        if (word.length > 1) {
+            // lastWord drives next-word prediction, so it must advance even when
+            // learning is switched off; only the database write is gated.
+            val previous = lastWord
             lastWord = word
+            if (s.learningEnabled && !profile.isSensitive) {
+                ServiceLocator.scope.launch {
+                    runCatching { ServiceLocator.suggestions.learn(word, s.language, previous) }
+                }
+            } else {
+                ServiceLocator.suggestions.invalidateCache()
+            }
+        } else {
+            lastWord = ""
         }
         updateSuggestions()
     }
@@ -385,6 +445,7 @@ class KeyboardController(
         session.finishComposing()
         page = Page.LETTERS
         shift = 0
+        alternatesMode = false
         applyTheme()
         refresh()
         root.clearSuggestions()
@@ -392,8 +453,13 @@ class KeyboardController(
 
     // -------------------------------------------------------------- suggestions
 
-    private fun currentWord(): String =
-        session.textBeforeCursor(48).takeLastWhile { it.isLetter() || it == '\'' || it == '\u2019' }
+    /**
+     * The word immediately before the cursor, or "" when the cursor is not
+     * sitting at the end of a word. Returning "" matters: callers delete
+     * [String.length] characters before the cursor, so a word that does not
+     * end at the cursor would corrupt the text.
+     */
+    private fun currentWord(): String = TextEditing.trailingWord(session.textBeforeCursor(48))
 
     private fun matchCase(source: String, replacement: String): String = when {
         source.isEmpty() -> replacement
@@ -419,7 +485,8 @@ class KeyboardController(
                 root.clearSuggestions()
             }
         } else {
-            root.showSuggestions(ServiceLocator.suggestions.suggestions(word, s.language, 3))
+            val typed = ServiceLocator.suggestions.suggestions(word, s.language, 3)
+            root.showSuggestions(typed)
         }
     }
 
@@ -458,10 +525,14 @@ class KeyboardController(
         }
     }
 
-    private fun applyOneHanded() {
+    private fun applyOneHanded(retry: Boolean = true) {
         val mode = prefs.oneHanded
         val width = root.width
-        if (width <= 0) return
+        if (width <= 0) {
+            // Called before the first layout pass: retry once, never loop.
+            if (retry) root.post { applyOneHanded(false) }
+            return
+        }
         val target = when (mode) {
             1 -> (width * 0.72f).toInt()
             2 -> (width * 0.72f).toInt()

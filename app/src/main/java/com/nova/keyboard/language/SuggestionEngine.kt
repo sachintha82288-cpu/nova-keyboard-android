@@ -15,13 +15,18 @@ class SuggestionEngine(
 
     private val english: List<String> by lazy { load("english_words.txt") }
     private val sinhala: List<String> by lazy { load("sinhala_words.txt") }
+
+    /** Rank in the bundled list == real-world frequency order. */
     private val englishRank: Map<String, Int> by lazy {
         english.withIndex().associate { it.value to it.index }
+    }
+    private val sinhalaRank: Map<String, Int> by lazy {
+        sinhala.withIndex().associate { it.value to it.index }
     }
 
     private fun load(name: String): List<String> = runCatching {
         context.assets.open(name).bufferedReader().useLines { lines ->
-            lines.map { it.trim() }.filter { it.isNotEmpty() }.toList()
+            lines.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toList()
         }
     }.getOrDefault(emptyList())
 
@@ -31,7 +36,7 @@ class SuggestionEngine(
     private fun userWords(language: String): List<String> {
         val now = System.currentTimeMillis()
         userCache[language]?.let { (at, words) -> if (now - at < 4000L) return words }
-        val words = learning.topWords(language, 400)
+        val words = runCatching { learning.topWords(language, 400) }.getOrDefault(emptyList())
         userCache[language] = now to words
         return words
     }
@@ -40,14 +45,18 @@ class SuggestionEngine(
 
     fun dictionary(language: String): List<String> = if (language == "si") sinhala else english
 
+    private fun rank(language: String): Map<String, Int> =
+        if (language == "si") sinhalaRank else englishRank
+
     fun isKnown(word: String, language: String): Boolean {
         val w = word.lowercase()
         if (w.isEmpty()) return true
-        if (learning.frequency(w, language) > 0) return true
-        return when (language) {
-            "si" -> sinhala.any { it == w }
-            else -> englishRank.containsKey(w) || w.length <= 2 || w.any { !it.isLetter() }
-        }
+        // Words with digits or symbols are never "misspelled" and must never be
+        // rewritten by autocorrect.
+        if (w.any { !it.isLetter() && it != '\'' && it != '\u2019' }) return true
+        if (w.length <= 2) return true
+        if (runCatching { learning.frequency(w, language) > 0 }.getOrDefault(false)) return true
+        return rank(language).containsKey(w)
     }
 
     fun suggestions(prefix: String, language: String, limit: Int = 3): List<String> {
@@ -63,9 +72,10 @@ class SuggestionEngine(
 
         // 2. Bundled dictionary, ordered by real-world frequency.
         val dict = dictionary(language)
+        val ranks = rank(language)
         dict.asSequence()
             .filter { it.startsWith(p) && it.length > p.length }
-            .sortedBy { englishRank[it] ?: Int.MAX_VALUE }
+            .sortedBy { ranks[it] ?: Int.MAX_VALUE }
             .take(limit)
             .forEach { out.add(it) }
 
@@ -74,7 +84,7 @@ class SuggestionEngine(
 
     fun nextWords(previous: String, language: String, limit: Int = 3): List<String> {
         if (previous.isBlank()) return emptyList()
-        val out = LinkedHashSet<String>(learning.nextWords(previous, limit))
+        val out = LinkedHashSet<String>(runCatching { learning.nextWords(previous, limit) }.getOrDefault(emptyList()))
         if (out.size < limit) {
             dictionary(language).asSequence()
                 .filter { it.startsWith(previous.take(1)) && it != previous }
@@ -84,25 +94,45 @@ class SuggestionEngine(
         return out.take(limit).toList()
     }
 
-    /** Returns a replacement word, or null when the typed word is already fine. */
+    /**
+     * Returns a replacement word, or null when the typed word is already fine.
+     *
+     * Only a *unique* best candidate is returned. The previous version returned the
+     * first word within the edit distance, in dictionary order, so "teh" could
+     * become anything from "tea" to "ten" — a wrong autocorrection is worse than
+     * no autocorrection. Ties now resolve by frequency, and a tie in frequency
+     * means no correction at all.
+     */
     fun correct(word: String, language: String): String? {
         val w = word.lowercase()
         if (w.length < 3 || isKnown(w, language)) return null
         val dict = dictionary(language)
         if (dict.isEmpty()) return null
+        val ranks = rank(language)
+        val maxDistance = if (w.length > 6) 2 else 1
         var best: String? = null
-        var bestDistance = 3
+        var bestDistance = maxDistance + 1
+        var bestRank = Int.MAX_VALUE
+        var ambiguous = false
+
         for (candidate in dict) {
             if (candidate.length !in (w.length - 1)..(w.length + 1)) continue
             if (candidate[0] != w[0]) continue
-            val d = editDistance(w, candidate, 2)
-            if (d < bestDistance) {
-                bestDistance = d
-                best = candidate
-                if (d == 1) break
+            val d = editDistance(w, candidate, maxDistance)
+            if (d > maxDistance) continue
+            val r = ranks[candidate] ?: Int.MAX_VALUE
+            when {
+                d < bestDistance -> {
+                    best = candidate; bestDistance = d; bestRank = r; ambiguous = false
+                }
+                d == bestDistance && r < bestRank -> {
+                    best = candidate; bestRank = r; ambiguous = false
+                }
+                d == bestDistance -> ambiguous = true
             }
         }
-        return if (bestDistance <= if (w.length > 6) 2 else 1) best else null
+        if (ambiguous && bestDistance > 1) return null
+        return best
     }
 
     fun learn(word: String, language: String, previous: String?) {

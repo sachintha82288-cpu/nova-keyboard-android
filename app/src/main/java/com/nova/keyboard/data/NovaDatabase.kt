@@ -46,6 +46,22 @@ class NovaDatabase(context: Context) :
         writableDatabase.execSQL(sql, args)
     }
 
+    /** Runs an UPDATE/DELETE and returns the number of affected rows. */
+    fun executeUpdate(sql: String, vararg args: Any?): Int =
+        writableDatabase.compileStatement(sql).use { statement ->
+            args.forEachIndexed { index, arg ->
+                when (arg) {
+                    null -> statement.bindNull(index + 1)
+                    is String -> statement.bindString(index + 1, arg)
+                    is Int -> statement.bindLong(index + 1, arg.toLong())
+                    is Long -> statement.bindLong(index + 1, arg)
+                    is Float -> statement.bindDouble(index + 1, arg.toDouble())
+                    else -> statement.bindString(index + 1, arg.toString())
+                }
+            }
+            statement.executeUpdateDelete()
+        }
+
     fun insert(table: String, values: ContentValues): Long =
         writableDatabase.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_IGNORE)
 

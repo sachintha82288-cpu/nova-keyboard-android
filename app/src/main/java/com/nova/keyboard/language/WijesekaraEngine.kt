@@ -121,6 +121,14 @@ object WijesekaraEngine {
             return Output(State(state.composing + HAL, pendingPrebase = false))
         }
 
+        // Space and punctuation end the syllable. Without this branch a dangling
+        // kombuva (pre-base flag) was appended *after* the space, so typing ෙ then
+        // space produced "ෙ" glued to an empty syllable.
+        if (value.length == 1 && (value[0].isWhitespace() || value[0].isDigit() ||
+                value in TIGHT_PUNCTUATION)) {
+            return Output(State(), (state.composing + value).ifEmpty { null })
+        }
+
         // Any other glyph (vowel sign, anusvara, punctuation) closes the vowel slot.
         val composing = state.composing
         return when {
@@ -135,4 +143,6 @@ object WijesekaraEngine {
     }
 
     fun finish(state: State): String = state.composing
+
+    private val TIGHT_PUNCTUATION = setOf(",", ".", "!", "?", ";", ":", "'", "\"", "-", "(", ")", "[", "]")
 }

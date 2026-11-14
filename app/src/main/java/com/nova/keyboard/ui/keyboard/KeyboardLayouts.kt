@@ -77,7 +77,9 @@ object KeyboardLayouts {
                 letter("z"), letter("x"), letter("c"), letter("v"),
                 letter("b"), letter("n"), letter("m"),
                 ch(",", 1f, listOf(";", ":")),
-                if (email) ch("@", 1f, listOf(".")) else if (url) ch("/", 1f, listOf(":", ".")) else ch(".", 1f, listOf("!", "?")),
+                if (email) ch("@", 1f, listOf("."))
+                else if (url) ch(".", 1f, listOf("/", ":", "-"))
+                else ch(".", 1f, listOf("!", "?")),
                 backspaceKey
             )
         )
@@ -88,7 +90,7 @@ object KeyboardLayouts {
                 emojiKey,
                 ch(",", 1f, listOf("!", "?")),
                 spaceKey(),
-                if (url) ch(".", 1f, listOf("/", ".com")) else ch(".", 1f, listOf(",", "?")),
+                if (url) ch("/", 1f, listOf(".", ":", "-")) else ch(".", 1f, listOf(",", "?")),
                 enterKey
             )
         )
@@ -144,7 +146,10 @@ object KeyboardLayouts {
             output = glyph,
             weight = if (key == "," || key == ".") 1f else 1f,
             alternates = alternates,
-            style = if (WijesekaraEngine.isConsonant(glyph)) KeyStyle.NORMAL else KeyStyle.NORMAL
+            // Signs and the al-lakuna are not letters: they are modifiers, so they
+            // are drawn as special keys like shift and backspace.
+            style = if (WijesekaraEngine.isConsonant(glyph) ||
+                WijesekaraEngine.isIndependentVowel(glyph)) KeyStyle.NORMAL else KeyStyle.SPECIAL
         )
     }
 

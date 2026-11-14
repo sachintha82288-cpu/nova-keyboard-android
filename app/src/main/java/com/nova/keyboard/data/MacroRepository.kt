@@ -5,6 +5,7 @@ import android.content.ContentValues
 class MacroRepository(private val db: NovaDatabase) {
 
     fun list(): List<Macro> {
+        cache = null
         val out = ArrayList<Macro>()
         db.cursor("SELECT id, shortcut, expansion, enabled FROM macros ORDER BY shortcut ASC").use {
             while (it.moveToNext()) {
@@ -20,6 +21,7 @@ class MacroRepository(private val db: NovaDatabase) {
             put("expansion", macro.expansion)
             put("enabled", if (macro.enabled) 1 else 0)
         }
+        cache = null
         return if (macro.id == 0L) {
             db.insert("macros", values)
         } else {
@@ -27,16 +29,29 @@ class MacroRepository(private val db: NovaDatabase) {
         }
     }
 
-    fun delete(id: Long) = db.delete("macros", "id = ?", id.toString())
-
-    /** Returns the expansion for an exact shortcut, or null. Text insertion only. */
-    fun expansionFor(shortcut: String): String? {
-        db.cursor(
-            "SELECT expansion FROM macros WHERE shortcut = ? AND enabled = 1",
-            shortcut
-        ).use { if (it.moveToFirst()) return it.getString(0) }
-        return null
+    fun delete(id: Long) {
+        cache = null
+        db.delete("macros", "id = ?", id.toString())
     }
+
+    @Volatile
+    private var cache: Map<String, String>? = null
+
+    private fun snapshot(): Map<String, String> {
+        cache?.let { return it }
+        val map = HashMap<String, String>()
+        db.cursor("SELECT shortcut, expansion FROM macros WHERE enabled = 1").use {
+            while (it.moveToNext()) map[it.getString(0)] = it.getString(1)
+        }
+        cache = map
+        return map
+    }
+
+    /**
+     * Returns the expansion for an exact shortcut, or null. Text insertion only.
+     * Served from an in-memory snapshot so a key press never waits on SQLite.
+     */
+    fun expansionFor(shortcut: String): String? = snapshot()[shortcut]
 
     fun seedIfEmpty() {
         if (db.cursor("SELECT COUNT(*) FROM macros").use { it.moveToFirst() && it.getInt(0) > 0 }) return

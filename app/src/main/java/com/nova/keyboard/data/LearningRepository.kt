@@ -8,11 +8,19 @@ class LearningRepository(private val db: NovaDatabase) {
     fun recordWord(word: String, language: String) {
         val clean = word.trim().lowercase()
         if (clean.length < 2) return
-        db.exec(
-            "INSERT INTO user_words(word, freq, language) VALUES(?, 1, ?) " +
-                "ON CONFLICT(word, language) DO UPDATE SET freq = freq + 1",
+        // UPDATE-then-INSERT instead of "ON CONFLICT ... DO UPDATE": upsert needs
+        // SQLite 3.24 (Android 11+), and this app supports Android 10.
+        val updated = db.executeUpdate(
+            "UPDATE user_words SET freq = freq + 1 WHERE word = ? AND language = ?",
             clean, language
         )
+        if (updated == 0) {
+            db.insert("user_words", ContentValues().apply {
+                put("word", clean)
+                put("freq", 1)
+                put("language", language)
+            })
+        }
     }
 
     fun topWords(language: String, limit: Int = 200): List<String> {
@@ -36,11 +44,17 @@ class LearningRepository(private val db: NovaDatabase) {
         val a = previous.trim().lowercase()
         val b = next.trim().lowercase()
         if (a.isEmpty() || b.isEmpty()) return
-        db.exec(
-            "INSERT INTO bigrams(prev, next, count) VALUES(?, ?, 1) " +
-                "ON CONFLICT(prev, next) DO UPDATE SET count = count + 1",
+        val updated = db.executeUpdate(
+            "UPDATE bigrams SET count = count + 1 WHERE prev = ? AND next = ?",
             a, b
         )
+        if (updated == 0) {
+            db.insert("bigrams", ContentValues().apply {
+                put("prev", a)
+                put("next", b)
+                put("count", 1)
+            })
+        }
     }
 
     fun nextWords(previous: String, limit: Int = 5): List<String> {

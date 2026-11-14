@@ -7,9 +7,20 @@ class ThemeManager(private val settings: SettingsRepository) {
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true; prettyPrint = true }
 
-    fun customThemes(): List<NovaTheme> = runCatching {
-        json.decodeFromString(ListSerializerHolder.serializer, settings.current.customThemesJson)
-    }.getOrDefault(emptyList())
+    private var cacheKey: String? = null
+    private var cacheValue: List<NovaTheme> = emptyList()
+
+    /** Decoded once per stored payload instead of on every theme lookup. */
+    fun customThemes(): List<NovaTheme> {
+        val raw = settings.current.customThemesJson
+        if (raw == cacheKey) return cacheValue
+        val decoded = runCatching {
+            json.decodeFromString(ListSerializerHolder.serializer, raw)
+        }.getOrDefault(emptyList())
+        cacheKey = raw
+        cacheValue = decoded
+        return decoded
+    }
 
     fun allThemes(): List<NovaTheme> = BuiltInThemes.all + customThemes()
 
