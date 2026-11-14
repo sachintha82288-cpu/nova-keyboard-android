@@ -14,8 +14,8 @@ system, and a full theme engine. It is a real `InputMethodService` — it types 
 | Min SDK | 29 (Android 10) |
 | Target SDK | 34 (Android 14) |
 | Language | Kotlin 1.9.24, Jetpack Compose (settings app), custom Views (keyboard surface) |
-| APK | **Releases** → `NOVA-KEYBOARD.apk` (signed, 19.6 MB) |
-| AAB | **Releases** → `NOVA-KEYBOARD.aab` (signed, 6.8 MB) |
+| APK | **Releases** → `NOVA-KEYBOARD.apk` (signed, ~2.8 MB) |
+| AAB | **Releases** → `NOVA-KEYBOARD.aab` (signed, ~3.3 MB) |
 
 ## What is inside
 
@@ -71,7 +71,7 @@ Full instructions, including SDK setup and signing, are in `documentation/BUILD-
 ## Honest status
 
 The app compiles, the 60 unit tests pass in CI, and the release APK is signed and verified
-(`apksigner verify` → v2 scheme OK). It was **not** installed on a physical phone or emulator in
-this build environment, so real-device typing in WhatsApp, browsers, code editors and so on has not
+(`apksigner verify`, `zipalign -c`, `aapt2 dump badging` — all run by the `Release` workflow). It was
+**not** installed on a physical phone or emulator in this build environment, so real-device typing in WhatsApp, browsers, code editors and so on has not
 been exercised. `documentation/TEST-REPORT.md` lists exactly which requirements are verified by code,
 which are implemented but unverified on hardware, and which are not implemented at all.
