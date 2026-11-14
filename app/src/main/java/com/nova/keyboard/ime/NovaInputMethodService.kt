@@ -72,10 +72,20 @@ class NovaInputMethodService : InputMethodService(), InputSession.Host {
     override fun onWindowShown() {
         try {
             super.onWindowShown()
-            controller?.onStartInput(currentInputEditorInfo)
+            // Not onStartInput: re-running the full reset on every window show wiped
+            // the in-progress Sinhala syllable and re-read the clipboard.
+            controller?.onWindowShown()
         } catch (t: Throwable) {
             CrashReporter.record(this, t)
         }
+    }
+
+    override fun onDestroy() {
+        // Drop the controller's reference to the view so the controller, key grid
+        // and panels can be collected when the IME window goes away.
+        rootView = null
+        controller = null
+        super.onDestroy()
     }
 
     // InputSession.Host

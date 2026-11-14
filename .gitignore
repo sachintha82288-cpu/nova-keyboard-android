@@ -1,3 +1,4 @@
+# Build output
 .gradle/
 build/
 app/build/
@@ -13,3 +14,7 @@ keystore.properties
 .idea/
 *.iml
 .DS_Store
+
+# CI scratch
+.ci/
+keys/

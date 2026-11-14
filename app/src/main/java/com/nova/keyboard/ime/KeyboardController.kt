@@ -50,6 +50,9 @@ class KeyboardController(
     private var aiPanel: AiPanelView? = null
     private var currentResult = ""
 
+    /** Identity of the field we are typing into, so a re-show does not reset state. */
+    private var fieldKey: String? = null
+
     private val settings get() = ServiceLocator.settings
     private val prefs get() = ServiceLocator.settings.current
 
@@ -71,7 +74,30 @@ class KeyboardController(
         runCatching { startInput(info) }
     }
 
+    /**
+     * `onWindowShown` used to call this again with the same editor, which reset the
+     * Sinhala composer, the shift state and the clipboard capture on every window
+     * show. The heavy reset now only happens when the field actually changes.
+     */
+    fun onWindowShown() {
+        runCatching {
+            applyTheme()
+            refresh()
+        }
+    }
+
     private fun startInput(info: android.view.inputmethod.EditorInfo?) {
+        val key = info?.let { it.inputType.toString() + "/" + it.fieldId + "/" + it.packageName }
+        if (key != null && key == fieldKey) {
+            // Same field re-shown: keep every bit of in-progress state.
+            runCatching {
+                applyTheme()
+                refresh()
+                updateAutoShift()
+            }
+            return
+        }
+        fieldKey = key
         profile = EditorTypeDetector.detect(info)
         page = if (profile.isNumber) Page.NUMBERS else Page.LETTERS
         shift = 0

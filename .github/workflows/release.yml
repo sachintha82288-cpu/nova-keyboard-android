@@ -1,0 +1,80 @@
+name: Release
+
+# Builds a signed release APK (and the AAB) and attaches both to the GitHub
+# release. The signing key is the one already used to publish NOVA, provided as
+# base64 in the NOVA_KEYSTORE_B64 secret so no key material ever lives in Git.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach the artefacts to"
+        required: true
+        default: "v1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Accept SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Decode signing keystore
+        if: ${{ secrets.NOVA_KEYSTORE_B64 != '' }}
+        run: |
+          mkdir -p keys
+          echo "${{ secrets.NOVA_KEYSTORE_B64 }}" | base64 -d > keys/nova-release.jks
+          cat > keystore.properties <<EOF
+          storeFile=keys/nova-release.jks
+          storePassword=${{ secrets.NOVA_STORE_PASSWORD }}
+          keyAlias=${{ secrets.NOVA_KEY_ALIAS }}
+          keyPassword=${{ secrets.NOVA_KEY_PASSWORD }}
+          EOF
+
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest --console=plain
+
+      - name: Build release APK and AAB
+        run: ./gradlew :app:assembleRelease :app:bundleRelease --console=plain
+
+      - name: Verify the signature
+        run: |
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$APK"
+          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$APK" | head -5
+          sha256sum "$APK"
+
+      - name: Upload artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nova-release
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      - name: Attach to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
