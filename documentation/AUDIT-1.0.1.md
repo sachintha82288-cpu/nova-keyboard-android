@@ -12,8 +12,8 @@ reproduced before it was fixed; nothing in this list is "probably fine now".
 | `:app:testDebugUnitTest` | **60 tests, 60 passing** (was: did not compile) |
 | `:app:assembleDebug` | BUILD SUCCESSFUL |
 | `:app:assembleRelease` | BUILD SUCCESSFUL, signed, aligned |
-| `apksigner verify --print-certs` | verifies (see the Release page for the certificate) |
-| `aapt2 dump badging` | `com.nova.keyboard`, versionCode 2, versionName 1.0.1, minSdk 29, targetSdk 34 |
+| `apksigner verify` / `aapt2 dump badging` / `zipalign -c` | run by the `Release` workflow on every `[release]` build |
+| Published artefacts | `NOVA-KEYBOARD.apk`, `NOVA-KEYBOARD.aab`, `checksums.txt`, source and docs zips |
 
 The runtime in this environment cannot reach Google Maven or the Gradle distribution, so the
 canonical build path is the `Build` GitHub Actions workflow on this repository. It runs the unit

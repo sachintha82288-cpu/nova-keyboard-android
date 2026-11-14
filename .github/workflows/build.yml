@@ -52,7 +52,7 @@ jobs:
         run: ./gradlew :app:assembleDebug --stacktrace --console=plain 2>&1 | tee /tmp/assemble.log
 
       - name: Publish log for the agent
-        if: always()
+        if: ${{ always() && steps.tests.outcome != 'success' }}
         run: |
           mkdir -p .ci
           {
