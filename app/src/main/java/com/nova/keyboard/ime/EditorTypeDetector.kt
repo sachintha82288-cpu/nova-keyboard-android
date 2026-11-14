@@ -21,6 +21,14 @@ data class EditorProfile(
 
 object EditorTypeDetector {
 
+    /**
+     * `TYPE_MASK_VARIATION` only means something inside its class: variation 0x10 is
+     * `TYPE_TEXT_VARIATION_PASSWORD` for text fields but `TYPE_NUMBER_VARIATION_PASSWORD`
+     * for number fields. Comparing a bare variation against the text constants (the
+     * previous behaviour) therefore two-bugged in both directions: it never recognised a
+     * number password, and it flagged `TYPE_CLASS_TEXT | 0x10` style variations of other
+     * classes as passwords.
+     */
     fun detect(info: EditorInfo?): EditorProfile {
         if (info == null) return EditorProfile()
         val type = info.inputType
@@ -28,10 +36,12 @@ object EditorTypeDetector {
         val variation = type and InputType.TYPE_MASK_VARIATION
 
         val password = when (cls) {
-            InputType.TYPE_CLASS_TEXT -> variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
-                variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
-                variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
-            InputType.TYPE_CLASS_NUMBER -> variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            InputType.TYPE_CLASS_TEXT ->
+                variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                    variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
+                    variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+            InputType.TYPE_CLASS_NUMBER ->
+                variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD
             else -> false
         }
 

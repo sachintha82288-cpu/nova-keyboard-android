@@ -42,6 +42,10 @@ class EmojiPanelView(
         search.setTextColor(theme.textColor)
         search.setHintTextColor(theme.specialText)
         search.setBackgroundColor(theme.keyBackground)
+        // This EditText lives inside the IME window: if it asked for an input
+        // method the keyboard would try to show itself on top of itself.
+        search.showSoftInputOnFocus = false
+        search.isFocusableInTouchMode = true
         search.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit

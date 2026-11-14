@@ -75,4 +75,36 @@ class WijesekaraComposerTest {
         assertTrue(!WijesekaraEngine.isConsonant(HAL))
         assertTrue(WijesekaraEngine.isIndependentVowel("\u0D85"))
     }
+
+    // ---------------------------------------------------------------- regressions
+
+    @Test
+    fun `punctuation is not swallowed into the syllable`() {
+        // Regression: a sign typed after a dangling kombuva landed after the
+        // punctuation, producing "ෙ." instead of ".".
+        assertEquals(KA + ".", type(listOf(KA, ".")))
+    }
+
+    @Test
+    fun `space ends the syllable cleanly`() {
+        assertEquals(KA + " ", type(listOf(KA, " ")))
+        assertEquals(KA + " " + KA, type(listOf(KA, " ", KA)))
+    }
+
+    @Test
+    fun `a dangling prebase flag does not leak into the next word`() {
+        // ෙ, space, then ක must not produce a stray kombuva: the unused sign is
+        // committed as typed and the next consonant starts clean.
+        assertEquals(KOMBUVA + " " + KA, type(listOf(KOMBUVA, " ", KA)))
+    }
+
+    @Test
+    fun `independent vowels break the syllable`() {
+        assertEquals(KA + "\u0D85", type(listOf(KA, "\u0D85")))
+    }
+
+    @Test
+    fun `anusvara closes the syllable`() {
+        assertEquals(KA + "\u0D82", type(listOf(KA, "\u0D82")))
+    }
 }

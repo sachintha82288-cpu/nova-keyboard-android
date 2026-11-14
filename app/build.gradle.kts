@@ -16,8 +16,10 @@ android {
         applicationId = "com.nova.keyboard"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        // 1.0.1 is an in-place upgrade: same applicationId, same signing key,
+        // higher versionCode, so `adb install -r` upgrades 1.0.0 without uninstalling.
+        versionCode = 2
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

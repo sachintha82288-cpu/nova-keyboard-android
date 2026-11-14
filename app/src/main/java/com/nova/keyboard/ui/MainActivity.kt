@@ -11,13 +11,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.nova.keyboard.core.CrashReporter
 import com.nova.keyboard.core.ServiceLocator
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ServiceLocator.init(this)
+        CrashReporter.install(this)
+        runCatching { ServiceLocator.init(this) }
+            .onFailure { CrashReporter.record(this, it) }
+        try {
         setContent {
             val settings by ServiceLocator.settings.state.collectAsState()
             val theme = ServiceLocator.themes.active()
@@ -37,6 +41,18 @@ class MainActivity : ComponentActivity() {
                     NovaApp(startOnboarding = !settings.onboardingDone)
                 }
             }
+        }
+        } catch (t: Throwable) {
+            CrashReporter.record(this, t)
+            val label = android.widget.TextView(this).apply {
+                text = "NOVA could not open its settings.\n\n" +
+                    t.javaClass.simpleName + ": " + (t.message ?: "") +
+                    "\n\nThis log is saved; open About after a restart to share it."
+                setTextColor(0xFFFF6B6B.toInt())
+                textSize = 14f
+                setPadding(40, 80, 40, 40)
+            }
+            setContentView(label)
         }
     }
 }

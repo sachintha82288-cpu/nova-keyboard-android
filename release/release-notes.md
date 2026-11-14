@@ -1,34 +1,47 @@
-# NOVA KEYBOARD 1.0.0
+# NOVA KEYBOARD 1.0.1
 
-First release. `versionCode 1`, `versionName 1.0.0`, minSdk 29, targetSdk 34.
+`versionCode 2`, `versionName 1.0.1`, minSdk 29, targetSdk 34. Installs over 1.0.0 (same
+applicationId, same signing key).
 
-## Highlights
+This release replaces the unstable 1.0.0 build. See `documentation/AUDIT-1.0.1.md` for the full
+list of bugs found, reproduced and fixed, and for exactly what was and was not verified.
+
+## Highlights (unchanged from 1.0.0)
 
 - Real Android IME with English, Sinhala Wijesekara and Sinhala phonetic input.
-- Sinhala syllable composer: `ෙ`+`ා` → ො, second `ා` → ෝ, hal conjuncts, AltGr letters as long-press.
 - AI Studio with 14 writing actions over any OpenAI-compatible endpoint (your key, Keystore-encrypted).
-- Gaming mode: theme, taller keys, phrase strip. Developer mode: 15 language layouts, snippets, macros.
-- Clipboard history, 10 themes with a full editor, and a privacy centre with per-dataset deletion.
+- Gaming mode, developer mode with 15 language layouts, snippets and macros.
+- Clipboard history, 10 themes with an editor, and a privacy centre with per-dataset deletion.
 
-## Security and privacy
+## Fixed in 1.0.1
 
-- No keystroke logging, no analytics, no trackers, no automatic uploads.
-- Password fields disable prediction, learning, clipboard capture and AI (`SECURE` badge).
-- HTTPS enforced; API key encrypted with AES-256-GCM under an Android Keystore key.
-- `allowBackup=false`; nothing stored leaves app-private storage.
+1. The build compiled a stale copy of 13 files — crash reporting, IME startup guards, the background
+   crash handler, Android-10-safe SQLite upserts, the macro cache and the emoji-search focus fix were
+   only in a duplicate folder the build ignored.
+2. Sinhala phonetic output was wrong for ordinary words (`thaththa`, `watak`, `ran`, `sinhala`,
+   `Hello`, `buddhaM`, `sri`), and the Wijesekara composer re-ordered a pending `ෙ` across spaces.
+3. Numeric password fields were not treated as sensitive.
+4. Double space produced `word.. `, long-press alternates leaked into the next word, backspace
+   repeat split emoji, and the URL layout could insert a literal `.com`.
+5. Every IME window show reset the in-progress syllable, shift state and AI panel.
 
-## Fixed during development
+## Verification
 
-- Trailing `a` after a consonant produced an extra අ (`සුබ` → `සුබඅ`). Fixed with the inherent-vowel rule.
-- `;shortcut` macros never matched because the word extractor stripped the `;`. Fixed by matching the
-  raw token before the cursor.
+- 60 unit tests, 60 passing (`:app:testDebugUnitTest`) on a clean GitHub Actions runner.
+- Debug APK assembles on every push; signed release APK + AAB are built by the `Release` workflow,
+  which also runs `apksigner verify`, `aapt2 dump badging` and `zipalign -c`.
 
-## Known issues
+## Known limits
 
-- Not tested on a physical device in the build environment (see `documentation/TEST-REPORT.md`).
-- Sinhala dictionary is a 166-word starter list plus learning.
+- Not tested on a physical device or emulator in this environment — see `documentation/TEST-REPORT.md`.
+- The Sinhala dictionary is a starter list plus on-device learning.
 - Floating keyboard and swipe typing are not implemented and are not advertised in the UI.
 
 ## Install
 
-`adb install -r NOVA-KEYBOARD.apk`, then enable NOVA in Android keyboard settings.
+```bash
+adb install -r NOVA-KEYBOARD.apk
+```
+
+Then open NOVA, enable it in *Android settings → System → Languages & input → On-screen keyboard →
+Manage keyboards*, and select it.

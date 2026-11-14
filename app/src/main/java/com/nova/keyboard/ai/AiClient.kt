@@ -30,8 +30,13 @@ class AiClient(
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
+        // The whole request (including redirects and a slow TLS handshake) is
+        // bounded by aiTimeoutSeconds; readTimeout alone could keep the panel in
+        // "Thinking…" for far longer than the user configured.
         .readTimeout(90, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(90, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
         .build()
 
     private val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -49,8 +54,16 @@ class AiClient(
             val key = secure.getSecret(KEY_ALIAS)
                 ?: return@withContext AiResult.Failure("No API key saved. Add one in AI Studio.")
             val base = s.aiBaseUrl.trim().trimEnd('/')
-            if (!base.startsWith("https://")) {
-                return@withContext AiResult.Failure("The provider URL must start with https://")
+            // `startsWith` alone accepted "https://" with no host and lower-case
+            // only; parse it properly so a typo fails here with a clear message
+            // instead of a confusing network error.
+            val parsed = runCatching { java.net.URI(base) }.getOrNull()
+            if (parsed == null || !parsed.scheme.equals("https", ignoreCase = true) ||
+                parsed.host.isNullOrBlank()
+            ) {
+                return@withContext AiResult.Failure(
+                    "Enter a full https:// provider URL, for example https://api.openai.com/v1"
+                )
             }
             if (user.isBlank()) return@withContext AiResult.Failure("There is no text to send.")
 
@@ -73,8 +86,12 @@ class AiClient(
                 .post(body.toRequestBody(mediaType))
                 .build()
 
+            val client = http.newBuilder()
+                .callTimeout(s.aiTimeoutSeconds.coerceIn(10, 120).toLong(), TimeUnit.SECONDS)
+                .build()
+
             try {
-                http.newCall(request).execute().use { response ->
+                client.newCall(request).execute().use { response ->
                     val payload = response.body?.string().orEmpty()
                     if (!response.isSuccessful) {
                         val detail = runCatching {
@@ -97,6 +114,7 @@ class AiClient(
                     }
                 }
             } catch (e: IOException) {
+                // Never surface the URL or the key in an error string.
                 AiResult.Failure("Network unavailable or request failed. The keyboard still works offline.")
             } catch (e: Exception) {
                 AiResult.Failure("AI request failed: " + (e.message ?: e.javaClass.simpleName))

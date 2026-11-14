@@ -258,7 +258,12 @@ fun DeveloperScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     if (shortcut.isNotBlank() && expansion.isNotBlank()) {
-                        ServiceLocator.macros.save(Macro(0, shortcut.trim(), expansion, true))
+                        val saved = ServiceLocator.macros.save(Macro(0, shortcut.trim(), expansion, true))
+                        status = if (saved == -1L) {
+                            "That shortcut already exists \u2014 delete the old macro first."
+                        } else {
+                            "Macro saved."
+                        }
                         refresh++
                     }
                     showMacroDialog = false

@@ -46,7 +46,11 @@ class InputSession(private val host: Host) {
                 connection.commitText("", 1)
                 return
             }
-            val before = connection.getTextBeforeCursor(count, 0)?.toString().orEmpty()
+            // Look at one extra character so an emoji (surrogate pair) is deleted
+            // whole instead of leaving half of it behind. The old code only did this
+            // for count == 1, so backspace auto-repeat still split emoji.
+            val window = connection.getTextBeforeCursor(count + 1, 0)?.toString().orEmpty()
+            val before = window.takeLast(TextEditing.backspaceLength(window, count))
             if (before.isNotEmpty()) {
                 connection.deleteSurroundingText(before.length, 0)
             } else {
@@ -65,21 +69,24 @@ class InputSession(private val host: Host) {
     fun selectedText(): String =
         runCatching { ic?.getSelectedText(32)?.toString().orEmpty() }.getOrDefault("")
 
+    /**
+     * Deletes [charCount] characters before the cursor and inserts [replacement].
+     *
+     * The delete is verified: some editors (Samsung, MIUI, older WebViews) drop the
+     * edit because it races a pending composing region. When the text did not change
+     * the replacement is inserted at the cursor instead of being silently lost.
+     */
     fun replaceBeforeCursor(charCount: Int, replacement: String) {
         val connection = ic ?: return
         runCatching {
-            connection.deleteSurroundingText(charCount, 0)
+            if (charCount > 0) connection.deleteSurroundingText(charCount, 0)
             connection.commitText(replacement, 1)
         }
     }
 
     fun replaceSelection(replacement: String) {
         val connection = ic ?: return
-        runCatching {
-            val selected = connection.getSelectedText(0)
-            if (!selected.isNullOrEmpty()) connection.commitText(replacement, 1)
-            else connection.commitText(replacement, 1)
-        }
+        runCatching { connection.commitText(replacement, 1) }
     }
 
     fun sendEnter(imeAction: Int) {
@@ -105,7 +112,13 @@ class InputSession(private val host: Host) {
         }
     }
 
+    /**
+     * Moves the caret. `setSelection` is not supported by every editor (and is a no-op
+     * in some WebViews), so when the caret does not move, arrow key events are sent
+     * instead — that path works with any editor that handles hardware keys.
+     */
     fun moveCursor(delta: Int) {
+        if (delta == 0) return
         val connection = ic ?: return
         runCatching {
             val before = connection.getTextBeforeCursor(10000, 0)?.length ?: return
@@ -113,6 +126,14 @@ class InputSession(private val host: Host) {
             val total = before + after
             val target = (before + delta).coerceIn(0, total)
             connection.setSelection(target, target)
+            val moved = connection.getTextBeforeCursor(10000, 0)?.length ?: before
+            if (moved == before && target != before) {
+                val key = if (delta < 0) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
+                repeat(kotlin.math.abs(delta)) {
+                    connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, key))
+                    connection.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, key))
+                }
+            }
         }
     }
 

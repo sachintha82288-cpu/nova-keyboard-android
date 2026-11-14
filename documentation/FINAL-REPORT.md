@@ -102,7 +102,7 @@ erasable in-app, backups disabled.
 
 ## 10. Testing results
 
-30 unit tests, 30 passing (6 suites). Build verification: debug + release APK + AAB all build; APK
+60 unit tests, 60 passing (7 suites). Build verification: debug + release APK + AAB all build; APK
 signed and verified with the v2 scheme; badging confirms package, version, minSdk 29, targetSdk 34.
 **No device or emulator test was possible in this environment** — see `TEST-REPORT.md` §3 for the full
 list of what was not run.

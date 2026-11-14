@@ -1,19 +1,25 @@
 # Test report
 
-_Environment: Debian 12 sandbox, 2 vCPU, 2 GB RAM. JDK 17.0.13, Gradle 8.7, AGP 8.5.2, SDK 34._
+_Environment: GitHub Actions `ubuntu-latest`, JDK 17 (Temurin), Gradle 8.7, AGP 8.5.2, SDK 34._
 
-## 1. Unit tests — 30 tests, 30 passing
+Every number below comes from the `Build` workflow (`.github/workflows/build.yml`), which runs the
+unit tests and assembles a debug APK on every push. The log it produces is committed to
+`.ci/last-build.log` on the branch that was built.
+
+## 1. Unit tests — 60 tests, 60 passing
 
 Run with `./gradlew :app:testDebugUnitTest`.
 
 | Suite | Tests | Covers |
 |---|---|---|
-| `SinhalaTransliteratorTest` | 6 | api → අපි, suba → සුබ, kohomada → කොහොමද, amma/ammaa, inherent vowel, anusvara, passthrough, candidate ordering |
-| `WijesekaraComposerTest` | 7 | consonant+sign, kombuva-before-consonant reordering, `ෙ`+`ා`→ො, second `ා`→ෝ, hal conjuncts, syllable commit, base/shift tables |
+| `SinhalaTransliteratorTest` | 14 | api → අපි, suba → සුබ, kohomada → කොහොමද, amma/ammaa, inherent vowel, anusvara, passthrough, candidate ordering, word-final hal, `th`/`t`, anusvara before a velar, capitalised input, ශ්‍රී |
+| `WijesekaraComposerTest` | 12 | consonant+sign, kombuva-before-consonant reordering, `ෙ`+`ා`→ො, second `ා`→ෝ, hal conjuncts, syllable commit, base/shift tables, punctuation and space ending a syllable, dangling pre-base flag |
+| `EditorTypeDetectorTest` | 6 | text/number password variations are sensitive; email, URL, number, phone and multiline classification; null `EditorInfo` |
 | `SuggestionEngineTest` | 4 | edit distance: exact, single edit, bounded search, known-distance pairs |
-| `LayoutTest` | 6 | QWERTY completeness, shift → uppercase, number row, Sinhala codepoints present, developer symbols and keywords, email `@` |
+| `TextEditingTest` | 7 | trailing word at cursor, cursor not after a word, apostrophes, Sinhala vowel signs, surrogate-pair backspace (single and repeat) |
+| `LayoutTest` | 10 | QWERTY completeness, shift → uppercase, number row, Sinhala codepoints present, developer symbols and keywords, email `@`, URL keys never guess a domain, row sizes, Sinhala sign key styling, comma key |
 | `ThemeSerializationTest` | 3 | JSON round-trip, 10 unique themes, palettes genuinely differ |
-| `MacroExpansionTest` | 1 | shortcut expansion contract |
+| `MacroExpansionTest` | 2 | shortcut expansion contract |
 
 Two real bugs were found by these tests during development and fixed:
 
@@ -21,6 +27,9 @@ Two real bugs were found by these tests during development and fixed:
    inherent-vowel rule.
 2. `;email`-style macros never matched because the word extractor stripped the `;`. Fixed by matching
    macros against the raw token before the cursor.
+
+The regression suites above were added by the 1.0.1 audit; every one of them fails on the 1.0.0
+source and passes now (`documentation/AUDIT-1.0.1.md` lists the bugs they pin).
 
 ## 2. Build verification — passed
 

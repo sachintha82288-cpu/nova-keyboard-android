@@ -10,12 +10,12 @@ system, and a full theme engine. It is a real `InputMethodService` — it types 
 | | |
 |---|---|
 | Package | `com.nova.keyboard` |
-| Version | 1.0.0 (versionCode 1) |
+| Version | 1.0.1 (versionCode 2) |
 | Min SDK | 29 (Android 10) |
 | Target SDK | 34 (Android 14) |
 | Language | Kotlin 1.9.24, Jetpack Compose (settings app), custom Views (keyboard surface) |
-| APK | **Releases** → `NOVA-KEYBOARD.apk` (signed, 19.6 MB) |
-| AAB | **Releases** → `NOVA-KEYBOARD.aab` (signed, 6.8 MB) |
+| APK | **Releases** → `NOVA-KEYBOARD.apk` (signed, ~2.8 MB) |
+| AAB | **Releases** → `NOVA-KEYBOARD.aab` (signed, ~3.3 MB) |
 
 ## What is inside
 
@@ -49,7 +49,7 @@ settings (see `documentation/INSTALLATION-GUIDE.md`).
 ```bash
 ./gradlew :app:assembleRelease      # signed APK  -> app/build/outputs/apk/release/
 ./gradlew :app:bundleRelease        # signed AAB  -> app/build/outputs/bundle/release/
-./gradlew :app:testDebugUnitTest    # 30 unit tests
+./gradlew :app:testDebugUnitTest    # 60 unit tests
 ```
 
 Full instructions, including SDK setup and signing, are in `documentation/BUILD-GUIDE.md`.
@@ -66,11 +66,12 @@ Full instructions, including SDK setup and signing, are in `documentation/BUILD-
 | `documentation/TEST-REPORT.md` | What was tested, how, and what was not |
 | `documentation/THIRD-PARTY-LICENSES.md` | Every dependency and its licence |
 | `documentation/FINAL-REPORT.md` | Requirement-by-requirement completion report |
+| `documentation/AUDIT-1.0.1.md` | Every bug fixed in the 1.0.1 rebuild, with reproductions |
 
 ## Honest status
 
-The app compiles, the 30 unit tests pass, and the release APK is signed and verified
-(`apksigner verify` → v2 scheme OK). It was **not** installed on a physical phone or emulator in
-this build environment, so real-device typing in WhatsApp, browsers, code editors and so on has not
+The app compiles, the 60 unit tests pass in CI, and the release APK is signed and verified
+(`apksigner verify`, `zipalign -c`, `aapt2 dump badging` — all run by the `Release` workflow). It was
+**not** installed on a physical phone or emulator in this build environment, so real-device typing in WhatsApp, browsers, code editors and so on has not
 been exercised. `documentation/TEST-REPORT.md` lists exactly which requirements are verified by code,
 which are implemented but unverified on hardware, and which are not implemented at all.

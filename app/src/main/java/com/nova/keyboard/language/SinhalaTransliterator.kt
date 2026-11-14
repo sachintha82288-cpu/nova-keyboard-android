@@ -14,31 +14,47 @@ package com.nova.keyboard.language
  *
  * A vowel after a consonant becomes its dependent sign; a bare "a" after a
  * consonant is the inherent vowel and produces no extra codepoint.
+ *
+ * Two rules make the output real Sinhala instead of "consonants in a row":
+ *  - a word-final consonant is followed by al-lakuna, otherwise the inherent
+ *    vowel would be read: `ran` is රන්, not රන;
+ *  - "n" before "g" or "h" becomes the anusvara: `sinhala` is සිංහල,
+ *    `lanka` is ලංක. Other nasal+stop clusters are deliberately left literal
+ *    (see the note in [transliterate]).
  */
 object SinhalaTransliterator {
 
     const val HAL = "\u0DCA"
+    const val ZWJ = "\u200D"
+    const val ANUSVARA = "\u0D82"
+    const val VISARGA = "\u0D83"
 
     private const val VOWEL_SIGNS = "\u0DCF\u0DD0\u0DD1\u0DD2\u0DD3\u0DD4\u0DD6\u0DD8\u0DD9\u0DDA\u0DDB\u0DDC\u0DDD\u0DDE\u0DDF"
 
+    // Order matters, not just length: `th` must resolve to ත (0DAD), not to the
+    // ථ (0DAE) that the aspirated transliteration `th` used to produce.
     private val consonants = listOf(
         "kh" to "\u0D9B", "k" to "\u0D9A", "gh" to "\u0D9D", "g" to "\u0D9C", "ng" to "\u0D9E",
-        "chh" to "\u0DAA", "ch" to "\u0DA1", "c" to "\u0DA0", "jh" to "\u0DA3", "j" to "\u0DA2",
-        "ny" to "\u0DA4",
-        "Th" to "\u0DA8", "T" to "\u0DA7", "Dh" to "\u0DAA", "D" to "\u0DA9", "N" to "\u0DAB",
-        "th" to "\u0DAE", "t" to "\u0DAD", "dh" to "\u0DB0", "d" to "\u0DAF", "n" to "\u0DB1",
+        "chh" to "\u0DA1", "ch" to "\u0DA0", "c" to "\u0DA0",
+        "jh" to "\u0DA3", "j" to "\u0DA2", "ny" to "\u0DA5",
+        "Th" to "\u0DA8", "Dh" to "\u0DAA", "T" to "\u0DA7", "D" to "\u0DA9", "N" to "\u0DAB",
+        // Colloquial Singlish: `th` is the dental ත (thaththa -> තත්ත) and a bare
+        // `t` is the retroflex ට (watak -> වටක්). The previous table had these two
+        // swapped, so half of every Sinhala word came out with the wrong letter.
+        "th" to "\u0DAD", "dh" to "\u0DB0", "t" to "\u0DA7", "d" to "\u0DAF", "n" to "\u0DB1",
         "ph" to "\u0DB5", "p" to "\u0DB4", "bh" to "\u0DB7", "b" to "\u0DB6", "m" to "\u0DB8",
         "y" to "\u0DBA", "r" to "\u0DBB", "l" to "\u0DBD", "v" to "\u0DC0", "w" to "\u0DC0",
         "sh" to "\u0DC1", "Sh" to "\u0DC2", "s" to "\u0DC3", "h" to "\u0DC4", "L" to "\u0DC5",
         "f" to "\u0DC6"
-    ).sortedByDescending { it.first.length }
+    )
+
 
     private val independentVowels = listOf(
         "aee" to "\u0D88", "aa" to "\u0D86", "ae" to "\u0D87", "ai" to "\u0D93",
         "au" to "\u0D96", "ee" to "\u0D92", "ii" to "\u0D8A", "oo" to "\u0D95",
         "uu" to "\u0D8C", "a" to "\u0D85", "e" to "\u0D91", "i" to "\u0D89",
         "o" to "\u0D94", "u" to "\u0D8B"
-    ).sortedByDescending { it.first.length }
+    )
 
     private val vowelSigns = listOf(
         "aee" to "\u0DD1", "aa" to "\u0DCF", "ae" to "\u0DD0", "ai" to "\u0DDB",
@@ -51,49 +67,146 @@ object SinhalaTransliterator {
 
     fun isSignChar(ch: Char): Boolean = VOWEL_SIGNS.indexOf(ch) >= 0
 
+    /** Roman vowels, including the ones that only appear inside a diphthong. */
+    private fun isVowelLetter(ch: Char): Boolean = ch in "aeiouA"
+
+
+    /**
+     * Digits and punctuation pass through untouched. Roman letters are folded to
+     * lower case first: a phonetic keyboard that left "Kandy" as "K" + mangled
+     * Sinhala was worse than one that transliterates it.
+     */
+    private fun isPassthrough(ch: Char): Boolean = ch.code < 128 && !ch.isLetter()
+
     /** Converts a romanised buffer into Sinhala script. */
     fun transliterate(input: String): String {
+        if (input.isEmpty()) return ""
         val out = StringBuilder()
         var i = 0
-        var lastConsonant = false
-        while (i < input.length) {
-            val rest = input.substring(i)
-            val cons = consonants.firstOrNull { rest.startsWith(it.first) }
-            if (cons != null) {
-                if (lastConsonant) out.append(HAL)
-                out.append(cons.second)
-                lastConsonant = true
-                i += cons.first.length
-                continue
+        // true while the last emitted glyph is a bare consonant that can still take a sign
+        var openConsonant = false
+
+        fun closeOpenConsonant() {
+            if (openConsonant) {
+                out.append(HAL)
+                openConsonant = false
             }
-            val sign = vowelSigns.firstOrNull { rest.startsWith(it.first) }
-            if (sign != null && lastConsonant) {
-                out.append(sign.second)
-                lastConsonant = false
-                i += sign.first.length
-                continue
+        }
+
+        // Fold to lower case so capitalised Singlish still converts, but keep the
+        // `n`/`N` and `t`/`T` distinction that the schema is built on.
+        val folded = input.map {
+            when {
+                // M (anusvara) and H (visarga) are code letters, not capitals.
+                it == 'M' || it == 'H' -> it
+                it in 'A'..'Z' -> it.lowercaseChar()
+                else -> it
             }
-            // A bare "a" after a consonant is the inherent vowel: no codepoint at all.
-            if (lastConsonant && rest.startsWith("a")) {
-                lastConsonant = false
+        }.joinToString("")
+
+        while (i < folded.length) {
+            val rest = folded.substring(i)
+            val ch = folded[i]
+
+            if (isPassthrough(ch)) {
+                // Latin text inside a Singlish word ("Kandy", "WiFi") is left alone
+                // rather than silently mangled into Sinhala letters.
+                closeOpenConsonant()
+                out.append(ch)
                 i += 1
                 continue
             }
+
+            // Ambiguous clusters are intentionally *not* guessed: Singlish "nd" can
+            // be න්ද or න්ඩ, and a wrong guess is worse than a literal reading. The
+            // two unambiguous nasals are handled here.
+            if (ch == 'n' && rest.length > 1) {
+                if (rest.startsWith("ng") || rest.startsWith("nk") || rest.startsWith("nh")) {
+                    // Only the nasal merges. The preceding consonant keeps no
+                    // al-lakuna (ලංක, not ල්ංක) and the next consonant is still
+                    // emitted normally (සිංහල, ලංක).
+                    out.append(ANUSVARA)
+                    openConsonant = false
+                    i += 1
+                    continue
+                }
+            }
+
+            // ශ්‍රී must be matched before the consonant table, otherwise "s"+"r"
+            // consume it and the result is ස්රී.
+            if (rest.startsWith("shrii") || rest.startsWith("srii")) {
+                closeOpenConsonant()
+                out.append("\u0DC1\u0DCA\u200D\u0DBB\u0DD3")
+                i += if (rest.startsWith("shrii")) 5 else 4
+                continue
+            }
+            if (rest.startsWith("shri") || rest.startsWith("sri")) {
+                closeOpenConsonant()
+                out.append("\u0DC1\u0DCA\u200D\u0DBB\u0DD3")
+                i += if (rest.startsWith("shri")) 4 else 3
+                continue
+            }
+
+            val cons = consonants.firstOrNull { rest.startsWith(it.first) }
+            if (cons != null) {
+                closeOpenConsonant()
+                out.append(cons.second)
+                openConsonant = true
+                i += cons.first.length
+                continue
+            }
+
+            val sign = vowelSigns.firstOrNull { rest.startsWith(it.first) }
+            if (sign != null && openConsonant) {
+                out.append(sign.second)
+                openConsonant = false
+                i += sign.first.length
+                continue
+            }
+
+            // A bare "a" after a consonant is the inherent vowel: no codepoint at all.
+            if (openConsonant && ch == 'a') {
+                openConsonant = false
+                i += 1
+                continue
+            }
+
             val indep = independentVowels.firstOrNull { rest.startsWith(it.first) }
             if (indep != null) {
+                closeOpenConsonant()
                 out.append(indep.second)
-                lastConsonant = false
                 i += indep.first.length
                 continue
             }
+
+            closeOpenConsonant()
             when {
-                rest.startsWith("M") -> { out.append("\u0D82"); lastConsonant = false; i += 1 }
-                rest.startsWith("H") -> { out.append("\u0D83"); lastConsonant = false; i += 1 }
-                rest.startsWith("~") -> { out.append(HAL); lastConsonant = false; i += 1 }
-                rest.startsWith(" ") -> { out.append(' '); lastConsonant = false; i += 1 }
-                else -> { out.append(input[i]); lastConsonant = false; i += 1 }
+                // M and H are anusvara/visarga only where they cannot be an
+                // ordinary letter: before a consonant or at the end of a word.
+                rest.startsWith("M") -> {
+                    if (i + 1 < folded.length && isVowelLetter(folded[i + 1])) {
+                        out.append("\u0DB8"); openConsonant = true
+                    } else {
+                        out.append(ANUSVARA)
+                    }
+                    i += 1
+                }
+                rest.startsWith("H") -> {
+                    if (i + 1 < folded.length && isVowelLetter(folded[i + 1])) {
+                        out.append("\u0DC4"); openConsonant = true
+                    } else {
+                        out.append(VISARGA)
+                    }
+                    i += 1
+                }
+                rest.startsWith("~") -> { out.append(HAL); i += 1 }
+                else -> { out.append(input[i]); i += 1 }
             }
         }
+
+        // A word-final consonant needs al-lakuna; the old code left the inherent
+        // vowel open, so `ran` came out රන instead of රන්.
+        closeOpenConsonant()
         return out.toString()
     }
 
