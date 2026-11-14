@@ -1,16 +1,22 @@
 name: Release
 
-# Builds a signed release APK + AAB and attaches them to a GitHub release.
+# Builds a *signed* release APK + AAB and (re)publishes them on the GitHub release.
+#
+# Trigger: push a commit whose message contains [release] (or run the workflow by
+# hand from the Actions tab). The job is gated so ordinary pushes only run Build.
 #
 # Signature: the release keystore is the one this project already publishes as a
 # release asset (documented in documentation/BUILD-GUIDE.md). It is downloaded at
-# build time, so no key material is committed here.
+# build time, so no key material is committed to this repository.
 
 on:
+  push:
+    branches: ["**"]
+    paths-ignore: [".ci/**"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to attach the artefacts to"
+        description: "Release tag to publish onto"
         required: true
         default: "v1.0.0"
 
@@ -19,11 +25,15 @@ permissions:
 
 jobs:
   release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.message, '[release]')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
       KEYSTORE_ASSET: NOVA-KEYBOARD-release-keystore.jks
+      TAG: ${{ inputs.tag || 'v1.0.0' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,20 +55,20 @@ jobs:
       - name: Fetch the published release keystore
         run: |
           mkdir -p keys
-          gh release download "${{ inputs.tag }}" --pattern "$KEYSTORE_ASSET" --dir keys
+          gh release download "$TAG" --pattern "$KEYSTORE_ASSET" --dir keys
           ls -l keys
 
       - name: Configure signing
         run: |
+          PASS='${{ secrets.NOVA_STORE_PASSWORD }}'
+          [ -z "$PASS" ] && PASS='NovaRelease2026'
           cat > keystore.properties <<EOF
           storeFile=keys/$KEYSTORE_ASSET
-          storePassword=${{ secrets.NOVA_STORE_PASSWORD || 'NovaRelease2026' }}
+          storePassword=$PASS
           keyAlias=nova
-          keyPassword=${{ secrets.NOVA_KEY_PASSWORD || 'NovaRelease2026' }}
+          keyPassword=$PASS
           EOF
-          # fail fast if the key does not open with these credentials
-          keytool -list -keystore "keys/$KEYSTORE_ASSET" \
-            -storepass "$(grep storePassword keystore.properties | cut -d= -f2)" -alias nova
+          keytool -list -keystore "keys/$KEYSTORE_ASSET" -storepass "$PASS" -alias nova
 
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest --console=plain
@@ -66,7 +76,7 @@ jobs:
       - name: Build release APK and AAB
         run: ./gradlew :app:assembleRelease :app:bundleRelease --console=plain
 
-      - name: Verify the signature and the manifest
+      - name: Verify signature, alignment and manifest
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
           echo "APK: $APK"
@@ -74,6 +84,16 @@ jobs:
           "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$APK" | head -4
           "$ANDROID_HOME/build-tools/34.0.0/zipalign" -c -v 4 "$APK" | tail -2
           sha256sum "$APK" app/build/outputs/bundle/release/*.aab
+
+      - name: Publish onto the release (replacing old artefacts)
+        run: |
+          gh release upload "$TAG" \
+            app/build/outputs/apk/release/*.apk \
+            app/build/outputs/bundle/release/*.aab \
+            --clobber
+          sha256sum app/build/outputs/apk/release/*.apk app/build/outputs/bundle/release/*.aab \
+            | sed 's|app/build/outputs/[a-z]*/[a-z]*/||' > /tmp/checksums.txt
+          gh release upload "$TAG" /tmp/checksums.txt --clobber
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v4
@@ -83,12 +103,3 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
-
-      - name: Attach to the release
-        if: ${{ inputs.tag != '' }}
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ inputs.tag }}
-          files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
