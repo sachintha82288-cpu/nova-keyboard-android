@@ -352,8 +352,6 @@ class KeyboardController(
                 ServiceLocator.scope.launch {
                     runCatching { ServiceLocator.suggestions.learn(word, s.language, previous) }
                 }
-            } else {
-                ServiceLocator.suggestions.invalidateCache()
             }
         } else {
             lastWord = ""

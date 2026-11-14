@@ -39,7 +39,7 @@ class KeyView(context: Context) : View(context) {
 
     private var pressed = false
     private var longPressFired = false
-    private var downAt = 0L
+    private var repeated = false
 
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
@@ -51,8 +51,10 @@ class KeyView(context: Context) : View(context) {
 
     private val repeatRunnable = object : Runnable {
         override fun run() {
+            if (!pressed) return
+            repeated = true
             onKey?.invoke(spec)
-            if (pressed && spec.code == KeyCode.BACKSPACE) postDelayed(this, 55L)
+            if (pressed && spec.code == KeyCode.BACKSPACE) postDelayed(this, REPEAT_INTERVAL_MS)
         }
     }
 
@@ -137,18 +139,19 @@ class KeyView(context: Context) : View(context) {
             MotionEvent.ACTION_DOWN -> {
                 pressed = true
                 longPressFired = false
-                downAt = System.currentTimeMillis()
+                repeated = false
                 invalidate()
                 if (hapticsEnabled) performHapticFeedback(hapticConstant)
                 if (soundEnabled) {
                     runCatching { playSoundEffect(android.view.SoundEffectConstants.CLICK) }
                 }
-                if (spec.alternates.isNotEmpty()) postDelayed(longPressRunnable, 380)
-                if (spec.code == KeyCode.BACKSPACE) postDelayed(repeatRunnable, 420L)
+                if (spec.alternates.isNotEmpty()) postDelayed(longPressRunnable, LONG_PRESS_MS)
+                if (spec.code == KeyCode.BACKSPACE) postDelayed(repeatRunnable, REPEAT_START_MS)
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
                 if (pressed && (event.x < 0 || event.x > width || event.y < 0 || event.y > height)) {
+                    // Sliding off the key cancels it: ACTION_UP sees wasPressed == false.
                     pressed = false
                     removeCallbacks(longPressRunnable)
                     removeCallbacks(repeatRunnable)
@@ -160,11 +163,11 @@ class KeyView(context: Context) : View(context) {
                 removeCallbacks(longPressRunnable)
                 removeCallbacks(repeatRunnable)
                 val wasPressed = pressed
-                val heldLong = System.currentTimeMillis() - downAt > 420L
                 pressed = false
                 invalidate()
-                // Backspace already repeated while held; every other key fires once.
-                if (wasPressed && !longPressFired && !(heldLong && spec.code == KeyCode.BACKSPACE)) {
+                // `repeated` is set by the repeat runnable itself, so a long press is
+                // never mistaken for (or added to) a single press.
+                if (wasPressed && !longPressFired && !repeated) {
                     onKey?.invoke(spec)
                 }
                 return true
@@ -178,6 +181,12 @@ class KeyView(context: Context) : View(context) {
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    private companion object {
+        const val LONG_PRESS_MS = 380L
+        const val REPEAT_START_MS = 420L
+        const val REPEAT_INTERVAL_MS = 55L
     }
 
     override fun onDetachedFromWindow() {
