@@ -123,7 +123,6 @@ fun LanguagesScreen() {
 
 @Composable
 fun AiStudioScreen() {
-    val context = LocalContext.current
     val settings by ServiceLocator.settings.state.collectAsState()
     val repo = ServiceLocator.settings
     val scope = rememberCoroutineScope()
