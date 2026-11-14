@@ -78,12 +78,25 @@ jobs:
 
       - name: Verify signature, alignment and manifest
         run: |
+          mkdir -p .ci
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
-          echo "APK: $APK"
-          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$APK"
-          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$APK" | head -4
-          "$ANDROID_HOME/build-tools/34.0.0/zipalign" -c -v 4 "$APK" | tail -2
-          sha256sum "$APK" app/build/outputs/bundle/release/*.aab
+          {
+            echo "# NOVA release verification"
+            echo "commit: $(git rev-parse HEAD)"
+            echo "date:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "## apksigner verify --print-certs"
+            "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$APK"
+            echo
+            echo "## aapt2 dump badging"
+            "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging "$APK" | head -6
+            echo
+            echo "## zipalign -c -v 4"
+            "$ANDROID_HOME/build-tools/34.0.0/zipalign" -c -v 4 "$APK" | tail -3
+            echo
+            echo "## checksums"
+            sha256sum "$APK" app/build/outputs/bundle/release/*.aab
+          } | tee .ci/last-release.log
 
       - name: Package the release assets
         run: |
@@ -103,6 +116,15 @@ jobs:
             gh release delete-asset "$TAG" "$old" --yes || true
           done
           gh release upload "$TAG" dist/* --clobber
+
+      - name: Commit the verification report
+        if: always()
+        run: |
+          git config user.name  "ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -f .ci/last-release.log || true
+          git commit -m "ci: release verification [skip ci]" || true
+          git push || true
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v4
